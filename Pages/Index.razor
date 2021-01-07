@@ -1,18 +1,22 @@
 ﻿@page "/"
 @inject IJSRuntime JS;
 
-<svg @ref="sudokusvg" class="sudoku" viewBox="-10 -10 1020 1020" @onmousedown="@MouseDown" opacity="1.0" xmlns="http://www.w3.org/2000/svg">
+<svg @ref="sudokusvg" class="sudoku" viewBox="-10 -10 1020 1020" @onmousedown="@MouseDown" @onmousemove="@MouseMove" @onmouseup="@MouseUp" @onkeydown="@KeyDown" tabindex="0" onblur="this.focus()" autofocus opacity="1.0" xmlns="http://www.w3.org/2000/svg">
     <rect id="rect-sudoku-background" x="0" y="0" width="1000" height="1000" style="fill:#fff;stroke-width:6" stroke="#000" />
     @{
         InitRects();
     }
-    @if (selectionRect != null)
+    @foreach (var rect in selectionRects)
     {
-        <rect x="@selectionRect.x" y="@selectionRect.y" width="@selectionRect.width" height="@selectionRect.height" fill-opacity="@selectionRect.opacity" style="fill:#ff0;stroke-width:@selectionRect.strokeWidth"  stroke="#000"/>
+        <rect x="@rect.x" y="@rect.y" width="@rect.width" height="@rect.height" fill-opacity="@rect.opacity" style="fill:#ff0;stroke-width:@rect.strokeWidth;"  stroke="#000"/>
     }
     @foreach (var rect in rects)
     {
-        <rect x="@rect.x" y="@rect.y" width="@rect.width" height="@rect.height" fill-opacity="@rect.opacity" style="fill:#fff;stroke-width:@rect.strokeWidth" stroke="#000"/>
+        <rect x="@rect.x" y="@rect.y" width="@rect.width" height="@rect.height" fill-opacity="@rect.opacity" style="fill:#fff;stroke-width:@rect.strokeWidth;" stroke="#000"/>
+    }
+    @foreach (var text in cellText.Values)
+    {
+        <text><text x="@text.x" y="@text.y" font-size="@text.fontSize" font-family="@text.fontFamily" dominant-baseline="middle" text-anchor="middle" style="pointer-events: none;">@text.text</text></text>
     }
 </svg>
 
@@ -36,9 +40,32 @@
         public readonly double strokeWidth;
         public readonly double opacity;
     }
+
+    protected class Text
+    {
+        public Text(double x, double y, double fontSize, string fontFamily, string text)
+        {
+            this.x = x;
+            this.y = y;
+            this.fontSize = fontSize;
+            this.fontFamily = fontFamily;
+            this.text = text;
+        }
+
+        public readonly double x;
+        public readonly double y;
+        public readonly double fontSize;
+        public readonly string fontFamily;
+        public readonly string text;
+    }
+
     List<Rect> rects = new List<Rect>();
-    Rect selectionRect = null;
-    (int, int) selectedCell = (-1, -1);
+    List<Rect> selectionRects = new List<Rect>();
+    HashSet<(int, int)> selectedCells = new HashSet<(int, int)>();
+    Dictionary<(int, int), Text> cellText = new Dictionary<(int, int), Text>(81);
+    bool mouseDown = false;
+    double mouseLastX = 0.0;
+    double mouseLastY = 0.0;
     ElementReference sudokusvg;
 
     protected void InitRects()
@@ -77,11 +104,13 @@
                 }
             }
         }
+
+        JS.InvokeVoidAsync("setFocusToElement", sudokusvg);
     }
 
-    protected async Task MouseDown(MouseEventArgs e)
+    protected async Task SelectCellAtLocation(double clientX, double clientY)
     {
-        var infoFromJs = await JS.InvokeAsync<string>("getSVG_XY", sudokusvg, e.ClientX, e.ClientY);
+        var infoFromJs = await JS.InvokeAsync<string>("getSVG_XY", sudokusvg, clientX, clientY);
         var values = infoFromJs.Split(" ");
         double x = Double.Parse(values[0]);
         double y = Double.Parse(values[1]);
@@ -89,21 +118,118 @@
         double rectWidth = 1000.0 / 9;
         double i = Math.Floor(x / rectWidth);
         double j = Math.Floor(y / rectWidth);
-        if (i < 0 || i > 8 || j < 0 || j > 8)
+        var selectCell = ((int)i, (int)j);
+        if (i >= 0 && i <= 8 && j >= 0 && j <= 8 && !selectedCells.Contains(selectCell))
         {
-            selectedCell = (-1, -1);
+            selectedCells.Add(selectCell);
+            selectionRects.Add(new Rect(
+                x: i * rectWidth,
+                y: j * rectWidth,
+                width: rectWidth,
+                height: rectWidth,
+                strokeWidth: 0.0,
+                opacity: 0.3
+            ));
+        }
+    }
+
+    protected async Task MouseDown(MouseEventArgs e)
+    {
+        selectionRects.Clear();
+        selectedCells.Clear();
+        mouseDown = true;
+        await SelectCellAtLocation(e.ClientX, e.ClientY);
+        mouseLastX = e.ClientX;
+        mouseLastY = e.ClientY;
+    }
+
+    protected async Task MouseMove(MouseEventArgs e)
+    {
+        if (mouseDown)
+        {
+            var boundingRect = await GetBoundingClientRect(sudokusvg);
+
+            double mouseDiffX = e.ClientX - mouseLastX;
+            double mouseDiffY = e.ClientY - mouseLastY;
+            double mouseDiffInvLen = 1.0 / Math.Sqrt(mouseDiffX * mouseDiffX + mouseDiffY * mouseDiffY);
+            mouseDiffX *= (boundingRect.Width / 18.0) * mouseDiffInvLen;
+            mouseDiffY *= (boundingRect.Height / 18.0) * mouseDiffInvLen;
+            mouseLastX += mouseDiffX;
+            mouseLastY += mouseDiffY;
+            while ((mouseDiffX > 0.0 && mouseLastX < e.ClientX || mouseDiffX < 0.0 && mouseLastX > e.ClientX)
+                && (mouseDiffY > 0.0 && mouseLastY < e.ClientY || mouseDiffY < 0.0 && mouseLastY > e.ClientY))
+            {
+                await SelectCellAtLocation(mouseLastX, mouseLastY);
+                mouseLastX += mouseDiffX;
+                mouseLastY += mouseDiffY;
+            }
+
+            await SelectCellAtLocation(e.ClientX, e.ClientY);
+            mouseLastX = e.ClientX;
+            mouseLastY = e.ClientY;
+        }
+    }
+
+    protected async Task MouseUp(MouseEventArgs e)
+    {
+        if (mouseDown)
+        {
+            await SelectCellAtLocation(e.ClientX, e.ClientY);
+            mouseDown = false;
+        }
+    }
+
+    protected void KeyDown(KeyboardEventArgs e)
+    {
+        string keyPressed = e.Key.ToLowerInvariant();
+        int value = 0;
+        if (keyPressed == "delete" || keyPressed == "backspace")
+        {
+            value = 0;
+        }
+        else if (!int.TryParse(keyPressed, out value))
+        {
             return;
         }
 
-        selectedCell = ((int)i, (int)j);
+        if (value > 0)
+        {
+            const double rectWidth = 1000.0 / 9;
+            const double fontSize = rectWidth * 3.0 / 4.0;
+            foreach (var (i, j) in selectedCells)
+            {
+                cellText[(i, j)] = new Text(
+                    x: (i + 0.5) * rectWidth,
+                    y: (j + 0.5) * rectWidth + (rectWidth - fontSize) / 4.0,
+                    fontSize: fontSize,
+                    fontFamily: "sans-serif",
+                    text: value.ToString()
+                );
+            }
+        }
+        else
+        {
+            foreach (var cell in selectedCells)
+            {
+                cellText.Remove(cell);
+            }
+        }
+    }
 
-        selectionRect = new Rect(
-            x: i * rectWidth,
-            y: j * rectWidth,
-            width: rectWidth,
-            height: rectWidth,
-            strokeWidth: 0.0,
-            opacity: 0.3
-        );
+    public class BoundingClientRect
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public double Top { get; set; }
+        public double Right { get; set; }
+        public double Bottom { get; set; }
+        public double Left { get; set; }
+    }
+
+    private async Task<BoundingClientRect> GetBoundingClientRect(ElementReference element)
+    {
+        return await JS.InvokeAsync<BoundingClientRect>("getBoundingClientRect", element);
     }
 }

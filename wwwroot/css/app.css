@@ -60,4 +60,9 @@ svg.sudoku {
     width: 90%;
     height: 90%;
     background: #fff;
+    cursor: default;
+}
+
+svg.sudoku:focus {
+    outline: none;
 }
