@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
@@ -20,6 +20,15 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        window.getSVG_XY = (svg, x, y) => {
+            var pt = svg.createSVGPoint();
+            pt.x = x;
+            pt.y = y;
+            pt = pt.matrixTransform(svg.getScreenCTM().inverse());
+            return pt.x + " " + pt.y;
+        };
+    </script>
 </body>
 
 </html>

@@ -1,7 +1,109 @@
 ﻿@page "/"
+@inject IJSRuntime JS;
 
-<h1>Hello, world!</h1>
+<svg @ref="sudokusvg" class="sudoku" viewBox="-10 -10 1020 1020" @onmousedown="@MouseDown" opacity="1.0" xmlns="http://www.w3.org/2000/svg">
+    <rect id="rect-sudoku-background" x="0" y="0" width="1000" height="1000" style="fill:#fff;stroke-width:6" stroke="#000" />
+    @{
+        InitRects();
+    }
+    @if (selectionRect != null)
+    {
+        <rect x="@selectionRect.x" y="@selectionRect.y" width="@selectionRect.width" height="@selectionRect.height" fill-opacity="@selectionRect.opacity" style="fill:#ff0;stroke-width:@selectionRect.strokeWidth"  stroke="#000"/>
+    }
+    @foreach (var rect in rects)
+    {
+        <rect x="@rect.x" y="@rect.y" width="@rect.width" height="@rect.height" fill-opacity="@rect.opacity" style="fill:#fff;stroke-width:@rect.strokeWidth" stroke="#000"/>
+    }
+</svg>
 
-Welcome to your new app.
+@code {
+    protected class Rect
+    {
+        public Rect(double x, double y, double width, double height, double strokeWidth, double opacity = 1.0)
+        {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            this.strokeWidth = strokeWidth;
+            this.opacity = opacity;
+        }
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+        public readonly double x;
+        public readonly double y;
+        public readonly double width;
+        public readonly double height;
+        public readonly double strokeWidth;
+        public readonly double opacity;
+    }
+    List<Rect> rects = new List<Rect>();
+    Rect selectionRect = null;
+    (int, int) selectedCell = (-1, -1);
+    ElementReference sudokusvg;
+
+    protected void InitRects()
+    {
+        if (rects.Count == 0)
+        {
+            double rectWidth = 1000.0 / 9;
+            for (int i = 0; i < 9; i++)
+            {
+                for (int j = 0; j < 9; j++)
+			    {
+                    rects.Add(new Rect(
+                        x: i * rectWidth,
+                        y: j * rectWidth,
+                        width: rectWidth,
+                        height: rectWidth,
+                        strokeWidth: 2.0,
+                        opacity: 0.0
+                    ));
+                }
+            }
+
+            rectWidth = 1000.0 / 3;
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+			    {
+                    rects.Add(new Rect(
+                            x: i * rectWidth,
+                            y: j * rectWidth,
+                            width: rectWidth,
+                            height: rectWidth,
+                            strokeWidth: 6.0,
+                            opacity: 0.0
+                        ));
+                }
+            }
+        }
+    }
+
+    protected async Task MouseDown(MouseEventArgs e)
+    {
+        var infoFromJs = await JS.InvokeAsync<string>("getSVG_XY", sudokusvg, e.ClientX, e.ClientY);
+        var values = infoFromJs.Split(" ");
+        double x = Double.Parse(values[0]);
+        double y = Double.Parse(values[1]);
+
+        double rectWidth = 1000.0 / 9;
+        double i = Math.Floor(x / rectWidth);
+        double j = Math.Floor(y / rectWidth);
+        if (i < 0 || i > 8 || j < 0 || j > 8)
+        {
+            selectedCell = (-1, -1);
+            return;
+        }
+
+        selectedCell = ((int)i, (int)j);
+
+        selectionRect = new Rect(
+            x: i * rectWidth,
+            y: j * rectWidth,
+            width: rectWidth,
+            height: rectWidth,
+            strokeWidth: 0.0,
+            opacity: 0.3
+        );
+    }
+}
