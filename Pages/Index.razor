@@ -5,8 +5,9 @@
     <rect id="rect-sudoku-background" x="0" y="0" width="1000" height="1000" style="fill:#fff;stroke-width:6" stroke="#000" />
     @{
         InitRects();
+        UpdateSortedSelectionRects();
     }
-    @foreach (var rect in selectionRects)
+    @foreach (var rect in sortedSelectionRects)
     {
         <rect @key="rect" x="@rect.x" y="@rect.y" width="@rect.width" height="@rect.height" fill-opacity="@rect.opacity" style="fill:#ff0;stroke-width:@rect.strokeWidth;"  stroke="#000"/>
     }
