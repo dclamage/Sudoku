@@ -113,7 +113,7 @@ namespace SudokuBlazor.Pages
 
         protected void SelectAll()
         {
-            for (int i = 0; i < 81; i++)
+            for (int i = 0; i < 9; i++)
             {
                 for (int j = 0; j < 9; j++)
                 {
