@@ -45,12 +45,12 @@ a, .btn-link {
     z-index: 1000;
 }
 
-#blazor-error-ui .dismiss {
-    cursor: pointer;
-    position: absolute;
-    right: 0.75rem;
-    top: 0.5rem;
-}
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
 
 svg.sudoku {
     display: block;
@@ -63,6 +63,35 @@ svg.sudoku {
     cursor: default;
 }
 
-svg.sudoku:focus {
-    outline: none;
+    svg.sudoku:focus {
+        outline: none;
+    }
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
 }
+
+.spinner {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    vertical-align: text-bottom;
+    border: .35em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    -webkit-animation: spinner .75s linear infinite;
+    animation: spinner .75s linear infinite;
+}
+
+.app-loader {
+    position: fixed;
+    top: 45%;
+    left: 45%;
+}
+
+    .app-loader .spinner {
+        width: 5rem;
+        height: 5rem;
+    }
