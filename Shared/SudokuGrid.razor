@@ -1,0 +1,4 @@
+﻿@foreach (var rect in rects)
+{
+    <rect @key="rect" x="@rect.x" y="@rect.y" width="@rect.width" height="@rect.height" fill-opacity="@rect.opacity" style="fill:#fff;stroke-width:@rect.strokeWidth;" stroke="#000"/>
+}

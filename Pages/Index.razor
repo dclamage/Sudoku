@@ -1,11 +1,9 @@
 ﻿@page "/"
+@using SudokuBlazor.Shared
 @inject IJSRuntime JS;
 
 <svg @ref="sudokusvg" class="sudoku" viewBox="-10 -10 1020 1020" @onmousedown="@MouseDown" @onmousemove="@MouseMove" @onmouseup="@MouseUp" @onkeydown="@KeyDown" tabindex="0" onblur="this.focus()" autofocus opacity="1.0" xmlns="http://www.w3.org/2000/svg">
     <rect id="rect-sudoku-background" x="0" y="0" width="1000" height="1000" style="fill:#fff;stroke-width:6" stroke="#000" />
-    @{
-        InitRects();
-    }
     @foreach (var rect in selectionRects)
     {
         if (rect != null)
@@ -13,10 +11,9 @@
             <rect @key="rect" x="@rect.x" y="@rect.y" width="@rect.width" height="@rect.height" fill-opacity="@rect.opacity" style="fill:#ff0;stroke-width:@rect.strokeWidth;"  stroke="#000"/>
         }
     }
-    @foreach (var rect in rects)
-    {
-        <rect @key="rect" x="@rect.x" y="@rect.y" width="@rect.width" height="@rect.height" fill-opacity="@rect.opacity" style="fill:#fff;stroke-width:@rect.strokeWidth;" stroke="#000"/>
-    }
+
+    <SudokuGrid />
+
     @foreach (var text in cellText)
     {
         if (text != null)

@@ -14,11 +14,10 @@ namespace SudokuBlazor.Pages
         private ElementReference sudokusvg;
 
         // Constants
-        private const double boxRectWidth = 1000.0 / 3.0;
         private const double cellRectWidth = 1000.0 / 9.0;
 
-        // Board
-        private readonly List<Rect> rects = new List<Rect>();
+        // State
+        private bool isDirty = true;
 
         // Input
         private bool mouseDown = false;
@@ -33,40 +32,14 @@ namespace SudokuBlazor.Pages
         private readonly Text[] cellText = new Text[81];
         const double valueFontSize = cellRectWidth * 3.0 / 4.0;
 
-        protected void InitRects()
+        protected override bool ShouldRender()
         {
-            if (rects.Count == 0)
+            if (isDirty)
             {
-                for (int i = 0; i < 9; i++)
-                {
-                    for (int j = 0; j < 9; j++)
-                    {
-                        rects.Add(new Rect(
-                            x: i * cellRectWidth,
-                            y: j * cellRectWidth,
-                            width: cellRectWidth,
-                            height: cellRectWidth,
-                            strokeWidth: 2.0,
-                            opacity: 0.0
-                        ));
-                    }
-                }
-
-                for (int i = 0; i < 3; i++)
-                {
-                    for (int j = 0; j < 3; j++)
-                    {
-                        rects.Add(new Rect(
-                            x: i * boxRectWidth,
-                            y: j * boxRectWidth,
-                            width: boxRectWidth,
-                            height: boxRectWidth,
-                            strokeWidth: 6.0,
-                            opacity: 0.0
-                        ));
-                    }
-                }
+                isDirty = false;
+                return true;
             }
+            return false;
         }
 
         protected async Task SelectCellAtLocation(double clientX, double clientY, bool controlDown, bool shiftDown, bool altDown)
@@ -102,11 +75,25 @@ namespace SudokuBlazor.Pages
                     if ((noModifiers || controlDown || shiftDown) && !cellExists)
                     {
                         selectionRects[cellIndex] = CreateSelectionRect(i, j);
+                        isDirty = true;
                     }
                     else if ((controlDown || altDown) && cellExists)
                     {
                         selectionRects[cellIndex] = null;
+                        isDirty = true;
                     }
+                }
+            }
+        }
+
+        protected void SelectNone()
+        {
+            for (int i = 0; i < selectionRects.Length; i++)
+            {
+                if (selectionRects[i] != null)
+                {
+                    selectionRects[i] = null;
+                    isDirty = true;
                 }
             }
         }
@@ -121,6 +108,7 @@ namespace SudokuBlazor.Pages
                     if (selectionRects[cellIndex] == null)
                     {
                         selectionRects[cellIndex] = CreateSelectionRect(i, j);
+                        isDirty = true;
                     }
                 }
             }
@@ -150,7 +138,7 @@ namespace SudokuBlazor.Pages
         {
             if (!e.CtrlKey && !e.ShiftKey && !e.AltKey)
             {
-                Array.Clear(selectionRects, 0, selectionRects.Length);
+                SelectNone();
             }
             lastCellSelected = -1;
             mouseDown = true;
@@ -229,13 +217,18 @@ namespace SudokuBlazor.Pages
                         fontFamily: "sans-serif",
                         text: value.ToString()
                     );
+                    isDirty = true;
                 }
             }
             else
             {
                 foreach (int cellIndex in SelectedCellIndices())
                 {
-                    cellText[cellIndex] = null;
+                    if (cellText[cellIndex] != null)
+                    {
+                        cellText[cellIndex] = null;
+                        isDirty = true;
+                    }
                 }
             }
         }
