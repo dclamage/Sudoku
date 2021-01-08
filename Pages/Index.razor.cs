@@ -10,50 +10,60 @@ namespace SudokuBlazor.Pages
 {
     partial class Index
     {
+        // Element References
+        private ElementReference sudokusvg;
+
+        // Constants
+        private const double boxRectWidth = 1000.0 / 3.0;
+        private const double cellRectWidth = 1000.0 / 9.0;
+
+        // Board
         private readonly List<Rect> rects = new List<Rect>();
-        private readonly Dictionary<(int, int), Rect> selectionRects = new Dictionary<(int, int), Rect>();
-        private readonly List<Rect> sortedSelectionRects = new List<Rect>();
-        private bool selectionRectsDirty = false;
-        private readonly Dictionary<(int, int), Text> cellText = new Dictionary<(int, int), Text>(81);
-        private (int, int) lastCellSelected = (-1, -1);
+
+        // Input
         private bool mouseDown = false;
         private double mouseLastX = 0.0;
         private double mouseLastY = 0.0;
-        private ElementReference sudokusvg;
+
+        // Selection
+        private readonly Rect[] selectionRects = new Rect[81];
+        private int lastCellSelected = -1;
+
+        // Values
+        private readonly Text[] cellText = new Text[81];
+        const double valueFontSize = cellRectWidth * 3.0 / 4.0;
 
         protected void InitRects()
         {
             if (rects.Count == 0)
             {
-                double rectWidth = 1000.0 / 9;
                 for (int i = 0; i < 9; i++)
                 {
                     for (int j = 0; j < 9; j++)
                     {
                         rects.Add(new Rect(
-                            x: i * rectWidth,
-                            y: j * rectWidth,
-                            width: rectWidth,
-                            height: rectWidth,
+                            x: i * cellRectWidth,
+                            y: j * cellRectWidth,
+                            width: cellRectWidth,
+                            height: cellRectWidth,
                             strokeWidth: 2.0,
                             opacity: 0.0
                         ));
                     }
                 }
 
-                rectWidth = 1000.0 / 3;
                 for (int i = 0; i < 3; i++)
                 {
                     for (int j = 0; j < 3; j++)
                     {
                         rects.Add(new Rect(
-                                x: i * rectWidth,
-                                y: j * rectWidth,
-                                width: rectWidth,
-                                height: rectWidth,
-                                strokeWidth: 6.0,
-                                opacity: 0.0
-                            ));
+                            x: i * boxRectWidth,
+                            y: j * boxRectWidth,
+                            width: boxRectWidth,
+                            height: boxRectWidth,
+                            strokeWidth: 6.0,
+                            opacity: 0.0
+                        ));
                     }
                 }
             }
@@ -79,58 +89,70 @@ namespace SudokuBlazor.Pages
             double x = Double.Parse(values[0]);
             double y = Double.Parse(values[1]);
 
-            const double rectWidth = 1000.0 / 9;
-            double i = Math.Floor(x / rectWidth);
-            double j = Math.Floor(y / rectWidth);
-            var selectCell = ((int)i, (int)j);
-            if (i >= 0 && i <= 8 && j >= 0 && j <= 8 && selectCell != lastCellSelected)
+            int i = (int)Math.Floor(x / cellRectWidth);
+            int j = (int)Math.Floor(y / cellRectWidth);
+            if (i >= 0 && i < 9 && j >= 0 && j < 9)
             {
-                lastCellSelected = selectCell;
+                int cellIndex = i * 9 + j;
+                if (lastCellSelected != cellIndex)
+                {
+                    lastCellSelected = cellIndex;
 
-                bool cellExists = selectionRects.ContainsKey(selectCell);
-                if ((noModifiers || controlDown || shiftDown) && !cellExists)
-                {
-                    selectionRects[selectCell] = new Rect(
-                        x: i * rectWidth,
-                        y: j * rectWidth,
-                        width: rectWidth,
-                        height: rectWidth,
-                        strokeWidth: 0.0,
-                        opacity: 0.3
-                    );
-                    selectionRectsDirty = true;
-                }
-                else if ((controlDown || altDown) && cellExists)
-                {
-                    selectionRects.Remove(selectCell);
-                    selectionRectsDirty = true;
+                    bool cellExists = selectionRects[cellIndex] != null;
+                    if ((noModifiers || controlDown || shiftDown) && !cellExists)
+                    {
+                        selectionRects[cellIndex] = CreateSelectionRect(i, j);
+                    }
+                    else if ((controlDown || altDown) && cellExists)
+                    {
+                        selectionRects[cellIndex] = null;
+                    }
                 }
             }
         }
 
-        private void UpdateSortedSelectionRects()
+        protected void SelectAll()
         {
-            if (selectionRectsDirty)
+            for (int i = 0; i < 81; i++)
             {
-                sortedSelectionRects.Clear();
-                foreach (var rect in selectionRects.Values)
+                for (int j = 0; j < 9; j++)
                 {
-                    sortedSelectionRects.Add(rect);
+                    int cellIndex = i * 9 + j;
+                    if (selectionRects[cellIndex] == null)
+                    {
+                        selectionRects[cellIndex] = CreateSelectionRect(i, j);
+                    }
                 }
-                sortedSelectionRects.Sort((a, b) => (a.y * 10000 + a.x).CompareTo(b.y * 10000 + b.x));
-                selectionRectsDirty = false;
             }
         }
+
+        protected IEnumerable<int> SelectedCellIndices()
+        {
+            for (int i = 0; i < selectionRects.Length; i++)
+            {
+                if (selectionRects[i] != null)
+                {
+                    yield return i;
+                }
+            }
+        }
+
+        protected static Rect CreateSelectionRect(int i, int j) => new Rect(
+            x: i * cellRectWidth,
+            y: j * cellRectWidth,
+            width: cellRectWidth,
+            height: cellRectWidth,
+            strokeWidth: 0.0,
+            opacity: 0.3
+        );
 
         protected async Task MouseDown(MouseEventArgs e)
         {
             if (!e.CtrlKey && !e.ShiftKey && !e.AltKey)
             {
-                selectionRects.Clear();
-                sortedSelectionRects.Clear();
-                selectionRectsDirty = false;
+                Array.Clear(selectionRects, 0, selectionRects.Length);
             }
-            lastCellSelected = (-1, -1);
+            lastCellSelected = -1;
             mouseDown = true;
             await SelectCellAtLocation(e.ClientX, e.ClientY, e.CtrlKey, e.ShiftKey, e.AltKey);
             mouseLastX = e.ClientX;
@@ -182,6 +204,12 @@ namespace SudokuBlazor.Pages
                 case "delete":
                 case "backspace":
                     break;
+                case "a":
+                    if (e.CtrlKey)
+                    {
+                        SelectAll();
+                    }
+                    return;
                 default:
                     if (!int.TryParse(keyPressed, out value))
                     {
@@ -192,14 +220,12 @@ namespace SudokuBlazor.Pages
 
             if (value > 0)
             {
-                const double rectWidth = 1000.0 / 9;
-                const double fontSize = rectWidth * 3.0 / 4.0;
-                foreach (var (i, j) in selectionRects.Keys)
+                foreach (int cellIndex in SelectedCellIndices())
                 {
-                    cellText[(i, j)] = new Text(
-                        x: (i + 0.5) * rectWidth,
-                        y: (j + 0.5) * rectWidth + (rectWidth - fontSize) / 4.0,
-                        fontSize: fontSize,
+                    cellText[cellIndex] = new Text(
+                        x: (cellIndex / 9 + 0.5) * cellRectWidth,
+                        y: (cellIndex % 9 + 0.5) * cellRectWidth + (cellRectWidth - valueFontSize) / 4.0,
+                        fontSize: valueFontSize,
                         fontFamily: "sans-serif",
                         text: value.ToString()
                     );
@@ -207,9 +233,9 @@ namespace SudokuBlazor.Pages
             }
             else
             {
-                foreach (var cell in selectionRects.Keys)
+                foreach (int cellIndex in SelectedCellIndices())
                 {
-                    cellText.Remove(cell);
+                    cellText[cellIndex] = null;
                 }
             }
         }
