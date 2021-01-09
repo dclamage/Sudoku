@@ -2,7 +2,23 @@
 @using SudokuBlazor.Shared
 @inject IJSRuntime JS;
 
-<svg @ref="sudokusvg" class="sudoku" viewBox="-10 -10 1020 1020" @onmousedown="@MouseDown" @onmousemove="@MouseMove" @onmouseup="@MouseUp" @onkeydown="@KeyDown" tabindex="0" onblur="this.focus()" autofocus opacity="1.0" xmlns="http://www.w3.org/2000/svg">
+<svg @ref="sudokusvg" class="sudoku" viewBox="-10 -10 1020 1020"
+    @onmousedown="@MouseDown"
+    @onmousemove="@MouseMove" 
+    @onmouseup="@MouseUp" 
+    @ontouchstart="@TouchStart" 
+    @ontouchmove="@TouchMove" 
+    @ontouchend="@TouchEnd" 
+    @ontouchcancel="@TouchEnd"
+    @onkeydown="@KeyDown"
+    @onmousedown:preventDefault=true @onmousedown:stopPropagation=true
+    @onmousemove:preventDefault=true @onmousemove:stopPropagation=true
+    @onmouseup:preventDefault=true @onmouseup:stopPropagation=true
+    @onclick:preventDefault=true @onclick:stopPropagation=true
+    tabindex="0"
+    opacity="1.0"
+    xmlns="http://www.w3.org/2000/svg">
+
     <rect id="rect-sudoku-background" x="0" y="0" width="1000" height="1000" style="fill:#fff;stroke-width:6" stroke="#000" />
     @foreach (var rect in selectionRects)
     {
