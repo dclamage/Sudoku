@@ -8,7 +8,7 @@
   "resources": {
     "assembly": {
       "Microsoft.AspNetCore.Components.dll": "sha256-HHVuTGkYseIkdOLKwovrlsAh+XGW2ANKtLd2QwOjaMQ=",
-      "Microsoft.AspNetCore.Components.Web.dll": "sha256-ccTKezrbsBwmzpCcF+IGHbeH8lWLIj0nK6y7KpK1xDk=",
+      "Microsoft.AspNetCore.Components.Web.dll": "sha256-HT1S7zZKZ1nuxgI+RvLltHJfWIHMTi6Sn3Mf30sf+bo=",
       "Microsoft.AspNetCore.Components.WebAssembly.dll": "sha256-L7iRwoGUzEEcN+5tFqeHZoiMGvJL3SGiVudXXISfOmE=",
       "Microsoft.Extensions.Configuration.dll": "sha256-bZZ69\/58+BnN9G33FpTd2iXAdfgLbBnDUiiKxfaZ7IU=",
       "Microsoft.Extensions.Configuration.Abstractions.dll": "sha256-7mxFRRlriJzO95ZBz4cmDSFADogdaoDy8MxzQoNtwaU=",
@@ -22,7 +22,7 @@
       "Microsoft.JSInterop.dll": "sha256-lVeT\/mUjzwSkVF0bZaNFwFi7rmUf+jMU61e0IuqjsV0=",
       "Microsoft.JSInterop.WebAssembly.dll": "sha256-HPiYjzuItf0u8j\/1JyLX28frakdbKfRPChJZA1FEJjE=",
       "System.IO.Pipelines.dll": "sha256-qZYTUS+ga7CydtH54fYPbehFCvx3B49I74G8dxreTog=",
-      "SudokuBlazor.dll": "sha256-5W1SFX2cZRysTTo6grRcLBg9IKAU\/dO5oXBsDWraKhc=",
+      "SudokuBlazor.dll": "sha256-lQKc6mTdD3l32o2ZvUPL7veeoxrL1mKkuX58l90YfYs=",
       "System.Collections.Concurrent.dll": "sha256-xu4X+ec8MQZCGfS0o10Fl0HewKkArvnXw\/biXWwVZVI=",
       "System.Collections.Immutable.dll": "sha256-Dge58W\/4JaPhWEhW+vWPPYPe\/+sFt\/KCr1OyrNkJZYc=",
       "System.Collections.dll": "sha256-MwkUjGV1kkpP719aVesu95FGAWCVNpQn1ZAP3xMidbE=",

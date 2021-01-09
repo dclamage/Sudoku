@@ -61,6 +61,7 @@ svg.sudoku {
     height: 90%;
     background: #fff;
     cursor: default;
+    touch-action:none;
 }
 
     svg.sudoku:focus {
