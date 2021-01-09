@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using SudokuBlazor.Models;
+using SudokuBlazor.Shared;
 
 namespace SudokuBlazor.Pages
 {
@@ -15,10 +16,10 @@ namespace SudokuBlazor.Pages
         private ElementReference sudokusvg;
 
         // Constants
-        private const double cellRectWidth = 1000.0 / 9.0;
+        private const double cellRectWidth = SudokuConstants.cellRectWidth;
 
         // State
-        private bool isDirty = true;
+        private bool hasRendered = false;
 
         // Input
         private bool mouseDown = false;
@@ -26,159 +27,90 @@ namespace SudokuBlazor.Pages
         private double inputLastX = 0.0;
         private double inputLastY = 0.0;
 
-        // Selection
-        private readonly Rect[] selectionRects = new Rect[81];
-        private int lastCellSelected = -1;
-
-        // Values
-        private readonly Text[] cellText = new Text[81];
-        const double valueFontSize = cellRectWidth * 3.0 / 4.0;
-
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            await SetFocus(sudokusvg);
-        }
+        // Components
+        private SudokuSelection selection;
+        private SudokuValues values;
 
         protected override bool ShouldRender()
         {
-            if (isDirty)
+            if (!hasRendered)
             {
-                isDirty = false;
+                hasRendered = true;
                 return true;
             }
             return false;
         }
 
-        protected async Task SetDirty()
-        {
-            if (!isDirty)
-            {
-                await SetFocus(sudokusvg);
-                isDirty = true;
-            }
-        }
-
         protected async Task SelectCellAtLocation(double clientX, double clientY, bool controlDown, bool shiftDown, bool altDown)
         {
-            // Choose a priority for each modifier, so only one is used
-            // Control -> Shift -> Alt
-            if (controlDown)
-            {
-                shiftDown = false;
-                altDown = false;
-            }
-            else if (shiftDown)
-            {
-                altDown = false;
-            }
-            bool noModifiers = !controlDown && !shiftDown && !altDown;
-
             var infoFromJs = await JS.InvokeAsync<string>("getSVG_XY", sudokusvg, clientX, clientY);
             var values = infoFromJs.Split(" ");
-            double x = Double.Parse(values[0]);
-            double y = Double.Parse(values[1]);
+            double x = double.Parse(values[0]);
+            double y = double.Parse(values[1]);
 
-            int i = (int)Math.Floor(x / cellRectWidth);
-            int j = (int)Math.Floor(y / cellRectWidth);
-            if (i >= 0 && i < 9 && j >= 0 && j < 9)
-            {
-                int cellIndex = i * 9 + j;
-                if (lastCellSelected != cellIndex)
-                {
-                    lastCellSelected = cellIndex;
-
-                    bool cellExists = selectionRects[cellIndex] != null;
-                    if ((noModifiers || controlDown || shiftDown) && !cellExists)
-                    {
-                        selectionRects[cellIndex] = CreateSelectionRect(i, j);
-                        await SetDirty();
-                    }
-                    else if ((controlDown || altDown) && cellExists)
-                    {
-                        selectionRects[cellIndex] = null;
-                        await SetDirty();
-                    }
-                }
-            }
+            int i = (int)Math.Floor(y / cellRectWidth);
+            int j = (int)Math.Floor(x / cellRectWidth);
+            selection.SelectCell(i, j, controlDown, shiftDown, altDown);
         }
-
-        protected async Task SelectNone()
-        {
-            for (int i = 0; i < selectionRects.Length; i++)
-            {
-                if (selectionRects[i] != null)
-                {
-                    selectionRects[i] = null;
-                    await SetDirty();
-                }
-            }
-        }
-
-        protected async Task SelectAll()
-        {
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    int cellIndex = i * 9 + j;
-                    if (selectionRects[cellIndex] == null)
-                    {
-                        selectionRects[cellIndex] = CreateSelectionRect(i, j);
-                        await SetDirty();
-                    }
-                }
-            }
-        }
-
-        protected IEnumerable<int> SelectedCellIndices()
-        {
-            for (int i = 0; i < selectionRects.Length; i++)
-            {
-                if (selectionRects[i] != null)
-                {
-                    yield return i;
-                }
-            }
-        }
-
-        protected static Rect CreateSelectionRect(int i, int j) => new Rect(
-            x: i * cellRectWidth,
-            y: j * cellRectWidth,
-            width: cellRectWidth,
-            height: cellRectWidth,
-            strokeWidth: 0.0,
-            opacity: 0.3
-        );
 
         protected async Task InputStart(double clientX, double clientY, bool ctrlKey, bool shiftKey, bool altKey)
         {
             if (!ctrlKey && !shiftKey && !altKey)
             {
-                await SelectNone();
+                selection.SelectNone();
             }
-            lastCellSelected = -1;
+            selection.ResetLastSelectedCell();
             await SelectCellAtLocation(clientX, clientY, ctrlKey, shiftKey, altKey);
             inputLastX = clientX;
             inputLastY = clientY;
+
+            if (selection.HasSelectedCells())
+            {
+                await SetFocus(sudokusvg);
+            }
         }
 
         protected async Task MouseDown(MouseEventArgs e)
         {
+            if (touchIdDown != -1 || mouseDown)
+            {
+                return;
+            }
+
             mouseDown = true;
             await InputStart(e.ClientX, e.ClientY, e.CtrlKey, e.ShiftKey, e.AltKey);
         }
 
         protected async Task TouchStart(TouchEventArgs e)
         {
-            if (e.ChangedTouches.Length == 0 || touchIdDown != -1)
+            if (e.ChangedTouches.Length == 0 || mouseDown)
             {
                 return;
             }
 
+            TouchPoint touch = null;
+            if (touchIdDown != -1)
+            {
+                foreach (var curTouch in e.ChangedTouches)
+                {
+                    if (curTouch.Identifier == touchIdDown)
+                    {
+                        touch = curTouch;
+                        break;
+                    }
+                }
+                if (touch == null)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                touch = e.ChangedTouches[0];
+                touchIdDown = touch.Identifier;
+            }
 
-            touchIdDown = e.ChangedTouches[0].Identifier;
-            Console.WriteLine($"{e.Type}: {touchIdDown}");
-            await InputStart(e.ChangedTouches[0].ClientX, e.ChangedTouches[0].ClientY, e.CtrlKey, e.ShiftKey, e.AltKey);
+            await InputStart(touch.ClientX, touch.ClientY, e.CtrlKey, e.ShiftKey, e.AltKey);
         }
 
         protected async Task InputMove(double clientX, double clientY, bool ctrlKey, bool shiftKey, bool altKey)
@@ -256,7 +188,6 @@ namespace SudokuBlazor.Pages
                     if (touch.Identifier == touchIdDown)
                     {
                         await InputEnd(touch.ClientX, touch.ClientY, e.CtrlKey, e.ShiftKey, e.AltKey);
-                        Console.WriteLine($"{e.Type}: {touchIdDown}");
                         touchIdDown = -1;
                         return;
                     }
@@ -269,6 +200,10 @@ namespace SudokuBlazor.Pages
             DeleteCell,
             Value,
             A,
+            MoveUp,
+            MoveDown,
+            MoveLeft,
+            MoveRight,
             Ignore
         }
         private static (KeyCodeType, int) GetKeyCodeType(string keyCode)
@@ -282,6 +217,14 @@ namespace SudokuBlazor.Pages
                     return (KeyCodeType.DeleteCell, 0);
                 case "KeyA": // a
                     return (KeyCodeType.A, -1);
+                case "ArrowUp":
+                    return (KeyCodeType.MoveUp, -1);
+                case "ArrowDown":
+                    return (KeyCodeType.MoveDown, -1);
+                case "ArrowLeft":
+                    return (KeyCodeType.MoveLeft, -1);
+                case "ArrowRight":
+                    return (KeyCodeType.MoveRight, -1);
             }
             if (keyCode.StartsWith("Digit"))
             {
@@ -294,49 +237,42 @@ namespace SudokuBlazor.Pages
             return (KeyCodeType.Ignore, -1);
         }
 
-        protected async Task KeyDown(KeyboardEventArgs e)
+        protected void KeyDown(KeyboardEventArgs e)
         {
             var (keyCodeType, value) = GetKeyCodeType(e.Code);
             switch (keyCodeType)
             {
                 case KeyCodeType.DeleteCell:
-                    foreach (int cellIndex in SelectedCellIndices())
+                    foreach (int cellIndex in selection.SelectedCellIndices())
                     {
-                        if (cellText[cellIndex] != null)
-                        {
-                            cellText[cellIndex] = null;
-                            await SetDirty();
-                        }
+                        values.ClearCell(cellIndex);
                     }
                     return;
                 case KeyCodeType.A:
                     if (e.CtrlKey)
                     {
-                        await SelectAll();
+                        selection.SelectAll();
                     }
                     return;
                 case KeyCodeType.Value:
-                    foreach (int cellIndex in SelectedCellIndices())
+                    foreach (int cellIndex in selection.SelectedCellIndices())
                     {
-                        cellText[cellIndex] = new Text(
-                            x: (cellIndex / 9 + 0.5) * cellRectWidth,
-                            y: (cellIndex % 9 + 0.5) * cellRectWidth + (cellRectWidth - valueFontSize) / 4.0,
-                            fontSize: valueFontSize,
-                            fontFamily: "sans-serif",
-                            text: value.ToString()
-                        );
-                        await SetDirty();
+                        values.SetCellValue(cellIndex, value);
                     }
                     return;
-            }
-        }
+                case KeyCodeType.MoveUp:
+                    selection.Move(SudokuSelection.MoveDir.Up, e.CtrlKey, e.ShiftKey, e.AltKey);
+                    return;
+                case KeyCodeType.MoveDown:
+                    selection.Move(SudokuSelection.MoveDir.Down, e.CtrlKey, e.ShiftKey, e.AltKey);
+                    return;
+                case KeyCodeType.MoveLeft:
+                    selection.Move(SudokuSelection.MoveDir.Left, e.CtrlKey, e.ShiftKey, e.AltKey);
+                    return;
+                case KeyCodeType.MoveRight:
+                    selection.Move(SudokuSelection.MoveDir.Right, e.CtrlKey, e.ShiftKey, e.AltKey);
+                    return;
 
-        protected async Task KeyUp(KeyboardEventArgs e)
-        {
-            var (keyCodeType, _) = GetKeyCodeType(e.Code);
-            if (keyCodeType != KeyCodeType.Ignore)
-            {
-                await SetFocus(sudokusvg);
             }
         }
 

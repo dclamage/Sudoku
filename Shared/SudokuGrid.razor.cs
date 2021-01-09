@@ -9,8 +9,8 @@ namespace SudokuBlazor.Shared
     partial class SudokuGrid
     {
         // Constants
-        private const double boxRectWidth = 1000.0 / 3.0;
-        private const double cellRectWidth = 1000.0 / 9.0;
+        private const double boxRectWidth = SudokuConstants.boxRectWidth;
+        private const double cellRectWidth = SudokuConstants.cellRectWidth;
 
         // State
         private readonly List<Rect> rects = new List<Rect>();

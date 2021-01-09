@@ -11,10 +11,11 @@ window.getBoundingClientRect = (element) => {
 window.setFocusToElement = (element) => {
     element.focus();
 };
+
 //Prevents backspace except in the case of textareas and text inputs to prevent user navigation.
 $(document).keydown(function (e) {
     var preventKeyPress;
-    if (e.keyCode == 8) {
+    if (e.keyCode == 8 || (e.keyCode == 37 || e.keyCode == 39) && e.altKey) {
         var d = e.srcElement || e.target;
         switch (d.tagName.toUpperCase()) {
             case 'TEXTAREA':
@@ -32,9 +33,11 @@ $(document).keydown(function (e) {
                 break;
         }
     }
-    else
+    else {
         preventKeyPress = false;
+    }
 
-    if (preventKeyPress)
+    if (preventKeyPress) {
         e.preventDefault();
+    }
 });

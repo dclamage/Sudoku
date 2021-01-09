@@ -1,0 +1,7 @@
+﻿@foreach (var text in cellText)
+{
+    if (text != null)
+    {
+        <text><text @key="text" x="@text.x" y="@text.y" font-size="@text.fontSize" font-family="@text.fontFamily" dominant-baseline="middle" text-anchor="middle" style="pointer-events: none;">@text.text</text></text>
+    }
+}
