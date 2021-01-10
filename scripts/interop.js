@@ -11,6 +11,10 @@ window.getBoundingClientRect = (element) => {
 window.setFocusToElement = (element) => {
     element.focus();
 };
+window.setSidebarSize = (element) => {
+    document.documentElement.style.setProperty(`--sidebar-width`, $(element).outerWidth(true));
+    document.documentElement.style.setProperty(`--sidebar-height`, $(element).outerHeight(true));
+}
 
 //Prevents backspace except in the case of textareas and text inputs to prevent user navigation.
 $(document).keydown(function (e) {
