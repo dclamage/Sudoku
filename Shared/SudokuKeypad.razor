@@ -1,4 +1,44 @@
-﻿@for(int row = 0; row < 3; row++)
+﻿@inject IJSRuntime JS;
+
+<div @ref="outerDiv">
+<div class="d-flex justify-center">
+    <MudFab
+        @onmousedown:preventDefault=true
+        Class="ma-1 px-2 rounded mode-button"
+        Color="@modeButtonColors[(int)MarkMode.Fill]"
+        DisableElevation="true"
+        Icon="@fillMarkIcon"
+        Size="Size.Large"
+        OnClick="@(() => ColorModePressed(MarkMode.Fill))" />
+    <MudFab
+        @onmousedown:preventDefault=true
+        Class="ma-1 px-2 rounded mode-button"
+        Color="@modeButtonColors[(int)MarkMode.Corner]"
+        DisableElevation="true"
+        Icon="@cornerMarkIcon"
+        Size="Size.Large"
+        OnClick="@(() => ColorModePressed(MarkMode.Corner))" />
+    <MudFab
+        @onmousedown:preventDefault=true
+        Class="ma-1 px-2 rounded mode-button"
+        Color="@modeButtonColors[(int)MarkMode.Center]"
+        DisableElevation="true"
+        Icon="@centerMarkIcon"
+        Size="Size.Large"
+        OnClick="@(() => ColorModePressed(MarkMode.Center))" />
+    <MudFab
+        @onmousedown:preventDefault=true
+        Class="ma-1 px-2 rounded mode-button"
+        Color="@modeButtonColors[(int)MarkMode.Color]"
+        DisableElevation="true"
+        Icon="@Icons.Material.Palette"
+        Size="Size.Large"
+        OnClick="@(() => ColorModePressed(MarkMode.Color))" />
+</div>
+
+<MudDivider DividerType="DividerType.Middle" Class="my-6"/>
+
+@for(int row = 0; row < 3; row++)
 {
     int localRow = row;
     <div class="d-flex justify-center">
@@ -27,6 +67,6 @@
         DisableElevation="true"
         Icon="@Icons.Material.Backspace"
         Size="Size.Large"
-        Style="width: 6rem; height: 4rem;"
         OnClick="@(() => NumpadButtonPressed(0))" />
+</div>
 </div>

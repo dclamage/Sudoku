@@ -213,8 +213,10 @@ namespace SudokuBlazor.Pages
             MoveDown,
             MoveLeft,
             MoveRight,
+            RotateMarkMode,
             Ignore
         }
+        // Very useful website to get keycodes: https://keycode.info/ (Look at event.code on bottom right)
         private static (KeyCodeType, int) GetKeyCodeType(string keyCode)
         {
             switch (keyCode)
@@ -234,6 +236,8 @@ namespace SudokuBlazor.Pages
                     return (KeyCodeType.MoveLeft, -1);
                 case "ArrowRight":
                     return (KeyCodeType.MoveRight, -1);
+                case "Space":
+                    return (KeyCodeType.RotateMarkMode, -1);
             }
             if (keyCode.StartsWith("Digit"))
             {
@@ -264,10 +268,7 @@ namespace SudokuBlazor.Pages
                     }
                     return;
                 case KeyCodeType.Value:
-                    foreach (int cellIndex in selection.SelectedCellIndices())
-                    {
-                        values.SetCellValue(cellIndex, value);
-                    }
+                    CellValueEntered(value);
                     return;
                 case KeyCodeType.MoveUp:
                     selection.Move(SudokuSelection.MoveDir.Up, e.CtrlKey, e.ShiftKey, e.AltKey);
@@ -281,7 +282,9 @@ namespace SudokuBlazor.Pages
                 case KeyCodeType.MoveRight:
                     selection.Move(SudokuSelection.MoveDir.Right, e.CtrlKey, e.ShiftKey, e.AltKey);
                     return;
-
+                case KeyCodeType.RotateMarkMode:
+                    keypad.CurrentMarkMode = (SudokuKeypad.MarkMode)((int)(keypad.CurrentMarkMode + 1) % (int)SudokuKeypad.MarkMode.Max);
+                    return;
             }
         }
 
@@ -292,10 +295,35 @@ namespace SudokuBlazor.Pages
 
         protected void NumpadKeyPressed(int value)
         {
-            foreach (int cellIndex in selection.SelectedCellIndices())
+            CellValueEntered(value);
+        }
+
+        private void CellValueEntered(int value)
+        {
+            switch (keypad.CurrentMarkMode)
             {
-                values.SetCellValue(cellIndex, value);
+                case SudokuKeypad.MarkMode.Fill:
+                    foreach (int cellIndex in selection.SelectedCellIndices())
+                    {
+                        values.SetCellValue(cellIndex, value);
+                    }
+                    break;
+                case SudokuKeypad.MarkMode.Corner:
+                    foreach (int cellIndex in selection.SelectedCellIndices())
+                    {
+                        values.ToggleCornerMark(cellIndex, value);
+                    }
+                    break;
+                case SudokuKeypad.MarkMode.Center:
+                    foreach (int cellIndex in selection.SelectedCellIndices())
+                    {
+                        values.ToggleCenterMark(cellIndex, value);
+                    }
+                    break;
+                case SudokuKeypad.MarkMode.Color:
+                    break;
             }
+            
         }
 
         private async Task<BoundingClientRect> GetBoundingClientRect(ElementReference element)

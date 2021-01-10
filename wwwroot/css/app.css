@@ -1,6 +1,11 @@
+:root {
+    --sidebar-width: 0;
+    --sidebar-height: 0;
+}
+
 svg.sudoku {
-    height: calc(min(95vw, 95vh - 4 * (4rem + 8px)));
-    width: calc(min(95vw, 95vh - 4 * (4rem + 8px)));
+    height: calc(min(95vw, 95vh - var(--sidebar-height) * 1px));
+    width: calc(min(95vw, 95vh - var(--sidebar-height) * 1px));
     margin: 0;
     padding: 0;
     cursor: default;
@@ -13,20 +18,20 @@ svg.sudoku {
     font-size: 2rem !important;
 }
 
+.mode-button {
+    width: 4rem !important;
+    height: 4rem !important;
+    font-size: 2rem !important;
+}
+
 @media(min-width:600px) {
     svg.sudoku {
-        height: calc(min(95vw - 3 * (6rem + 18px), 95vh));
-        width: calc(min(95vw - 3 * (6rem + 18px), 95vh));
+        height: calc(min(95vw - var(--sidebar-width) * 1px, 95vh));
+        width: calc(min(95vw - var(--sidebar-width) * 1px, 95vh));
         margin: 0;
         padding: 0;
         cursor: default;
         touch-action: none;
-    }
-
-    .numpad-button {
-        width: 6rem !important;
-        height: 4rem !important;
-        font-size: 2rem !important;
     }
 }
 
