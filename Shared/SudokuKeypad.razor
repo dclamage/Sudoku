@@ -2,36 +2,40 @@
 
 <div @ref="outerDiv">
 <div class="d-flex justify-center">
-    <MudFab
+    <MudFabExt
         @onmousedown:preventDefault=true
         Class="ma-1 px-2 rounded mode-button"
         Color="@modeButtonColors[(int)MarkMode.Fill]"
         DisableElevation="true"
         Icon="@fillMarkIcon"
+        IconSize="Size.Large"
         Size="Size.Large"
         OnClick="@(() => ColorModePressed(MarkMode.Fill))" />
-    <MudFab
+    <MudFabExt
         @onmousedown:preventDefault=true
         Class="ma-1 px-2 rounded mode-button"
         Color="@modeButtonColors[(int)MarkMode.Corner]"
         DisableElevation="true"
         Icon="@cornerMarkIcon"
+        IconSize="Size.Large"
         Size="Size.Large"
         OnClick="@(() => ColorModePressed(MarkMode.Corner))" />
-    <MudFab
+    <MudFabExt
         @onmousedown:preventDefault=true
         Class="ma-1 px-2 rounded mode-button"
         Color="@modeButtonColors[(int)MarkMode.Center]"
         DisableElevation="true"
         Icon="@centerMarkIcon"
+        IconSize="Size.Large"
         Size="Size.Large"
         OnClick="@(() => ColorModePressed(MarkMode.Center))" />
-    <MudFab
+    <MudFabExt
         @onmousedown:preventDefault=true
         Class="ma-1 px-2 rounded mode-button"
         Color="@modeButtonColors[(int)MarkMode.Color]"
         DisableElevation="true"
         Icon="@Icons.Material.Palette"
+        IconSize="Size.Large"
         Size="Size.Large"
         OnClick="@(() => ColorModePressed(MarkMode.Color))" />
 </div>
@@ -60,13 +64,14 @@
 }
 
 <div class="d-flex justify-center">
-    <MudFab
+    <MudFabExt
         @onmousedown:preventDefault=true
         Class="ma-1 px-2 rounded numpad-button"
         Color="Color.Error"
         DisableElevation="true"
         Icon="@Icons.Material.Backspace"
         Size="Size.Large"
+        IconSize="Size.Large"
         OnClick="@(() => NumpadButtonPressed(0))" />
 </div>
 </div>
