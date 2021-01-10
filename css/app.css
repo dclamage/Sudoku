@@ -1,6 +1,6 @@
 svg.sudoku {
-    height: calc(min(95vw, 95vh - 4 * (2rem + 8px)));
-    width: calc(min(95vw, 95vh - 4 * (2rem + 8px)));
+    height: calc(min(95vw, 95vh - 4 * (4rem + 8px)));
+    width: calc(min(95vw, 95vh - 4 * (4rem + 8px)));
     margin: 0;
     padding: 0;
     cursor: default;
@@ -8,9 +8,9 @@ svg.sudoku {
 }
 
 .numpad-button {
-    width: 3rem !important;
-    height: 2rem !important;
-    font-size: 1rem !important;
+    width: 6rem !important;
+    height: 4rem !important;
+    font-size: 2rem !important;
 }
 
 @media(min-width:600px) {
