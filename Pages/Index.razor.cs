@@ -30,6 +30,15 @@ namespace SudokuBlazor.Pages
         // Components
         private SudokuSelection selection;
         private SudokuValues values;
+        private SudokuKeypad keypad;
+
+        protected override void OnAfterRender(bool firstRender)
+        {
+            if (firstRender)
+            {
+                keypad.NumpadPressedAction = NumpadKeyPressed;
+            }
+        }
 
         protected override bool ShouldRender()
         {
@@ -273,6 +282,19 @@ namespace SudokuBlazor.Pages
                     selection.Move(SudokuSelection.MoveDir.Right, e.CtrlKey, e.ShiftKey, e.AltKey);
                     return;
 
+            }
+        }
+
+        protected void FocusLost()
+        {
+            selection.SelectNone();
+        }
+
+        protected void NumpadKeyPressed(int value)
+        {
+            foreach (int cellIndex in selection.SelectedCellIndices())
+            {
+                values.SetCellValue(cellIndex, value);
             }
         }
 

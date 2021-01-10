@@ -1,72 +1,38 @@
-@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
-
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+svg.sudoku {
+    height: calc(min(95vw, 95vh - 4 * (2rem + 8px)));
+    width: calc(min(95vw, 95vh - 4 * (2rem + 8px)));
     margin: 0;
     padding: 0;
-    overflow: hidden;
-}
-
-a, .btn-link {
-    color: #0366d6;
-}
-
-.btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
-}
-
-.content {
-    padding-top: 1.1rem;
-}
-
-.valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
-}
-
-.invalid {
-    outline: 1px solid red;
-}
-
-.validation-message {
-    color: red;
-}
-
-#blazor-error-ui {
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
-    display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
-}
-
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
-
-svg.sudoku {
-    display: block;
-    position: absolute;
-    top: 5%;
-    left: 5%;
-    width: 90%;
-    height: 90%;
-    background: #fff;
     cursor: default;
-    touch-action:none;
+    touch-action: none;
 }
 
-    svg.sudoku:focus {
-        outline: none;
+.numpad-button {
+    width: 3rem !important;
+    height: 2rem !important;
+    font-size: 1rem !important;
+}
+
+@media(min-width:600px) {
+    svg.sudoku {
+        height: calc(min(95vw - 3 * (6rem + 18px), 95vh));
+        width: calc(min(95vw - 3 * (6rem + 18px), 95vh));
+        margin: 0;
+        padding: 0;
+        cursor: default;
+        touch-action: none;
     }
+
+    .numpad-button {
+        width: 6rem !important;
+        height: 4rem !important;
+        font-size: 2rem !important;
+    }
+}
+
+svg.sudoku:focus {
+    outline: none;
+}
 
 svg text {
     -webkit-user-select: none;

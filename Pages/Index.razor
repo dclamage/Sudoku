@@ -1,30 +1,40 @@
 ﻿@page "/"
-@using SudokuBlazor.Shared
 @inject IJSRuntime JS;
 
-<svg @ref="sudokusvg" class="sudoku touch-prevent-default" viewBox="-10 -10 1020 1020"
-    @onmousedown="@MouseDown"
-    @onmousemove="@MouseMove" 
-    @onmouseup="@MouseUp" 
-    @ontouchstart="@TouchStart" 
-    @ontouchmove="@TouchMove" 
-    @ontouchend="@TouchEnd" 
-    @ontouchcancel="@TouchEnd"
-    @onkeydown="@KeyDown"
-    @onmousedown:preventDefault=true @onmousedown:stopPropagation=true
-    @onmousemove:preventDefault=true @onmousemove:stopPropagation=true
-    @onmouseup:preventDefault=true @onmouseup:stopPropagation=true
-    @onclick:preventDefault=true @onclick:stopPropagation=true
-    tabindex="0"
-    autofocus
-    opacity="1.0"
-    xmlns="http://www.w3.org/2000/svg">
+<div class="d-flex flex-column flex-sm-row justify-center">
+    <div class="d-flex justify-center">
+        <svg @ref="sudokusvg" class="sudoku" viewBox="-10 -10 1020 1020"
+            @onmousedown="@MouseDown"
+            @onmousemove="@MouseMove"
+            @onmouseup="@MouseUp"
+            @ontouchstart="@TouchStart"
+            @ontouchmove="@TouchMove"
+            @ontouchend="@TouchEnd"
+            @ontouchcancel="@TouchEnd"
+            @onkeydown="@KeyDown"
+            @onblur="@FocusLost"
+            @onmousedown:preventDefault=true @onmousedown:stopPropagation=true
+            @onmousemove:preventDefault=true @onmousemove:stopPropagation=true
+            @onmouseup:preventDefault=true @onmouseup:stopPropagation=true
+            @onclick:preventDefault=true @onclick:stopPropagation=true
+            @oncontextmenu="@((MouseEventArgs e) => {})" @oncontextmenu:preventDefault=true @oncontextmenu:stopPropagation=true
+            tabindex="0"
+            autofocus
+            opacity="1.0"
+            xmlns="http://www.w3.org/2000/svg">
 
-    <rect id="rect-sudoku-background" x="0" y="0" width="1000" height="1000" style="fill:#fff;stroke-width:6" stroke="#000" />
+            <rect id="rect-sudoku-background" x="0" y="0" width="1000" height="1000" style="fill:#fff;stroke-width:6" stroke="#000" />
 
-    <SudokuSelection @ref="selection" />
+            <SudokuSelection @ref="selection" />
 
-    <SudokuGrid />
+            <SudokuGrid />
 
-    <SudokuValues @ref="values" />
-</svg>
+            <SudokuValues @ref="values" />
+
+        </svg>
+    </div>
+
+    <div class="d-flex flex-column justify-center">
+        <SudokuKeypad @ref="keypad"/>
+    </div>
+</div>

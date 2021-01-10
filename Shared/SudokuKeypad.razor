@@ -1,0 +1,32 @@
+﻿@for(int row = 0; row < 3; row++)
+{
+    int localRow = row;
+    <div class="d-flex justify-center">
+    @for(int i = 1; i <= 3; i++)
+    {
+        int locali = i;
+        int value = localRow * 3 + locali;
+        <MudFab
+            @onmousedown:preventDefault=true
+            Class="ma-1 rounded numpad-button"
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            DisableElevation="true"
+            Size="Size.Large"
+            Label="@value.ToString()"
+            OnClick="@(() => NumpadButtonPressed(value))" />
+    }
+    </div>
+}
+
+<div class="d-flex justify-center">
+    <MudFab
+        @onmousedown:preventDefault=true
+        Class="ma-1 px-2 rounded numpad-button"
+        Color="Color.Error"
+        DisableElevation="true"
+        Icon="@Icons.Material.Backspace"
+        Size="Size.Large"
+        Style="width: 6rem; height: 4rem;"
+        OnClick="@(() => NumpadButtonPressed(0))" />
+</div>
