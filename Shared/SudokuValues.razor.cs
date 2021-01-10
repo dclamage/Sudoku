@@ -90,6 +90,12 @@ namespace SudokuBlazor.Shared
 
         public void ToggleCornerMark(int cellIndex, int value)
         {
+            if (value < 1 || value > 9)
+            {
+                ClearCell(cellIndex);
+                return;
+            }
+
             if (cellValues[cellIndex] != 0)
             {
                 return;
@@ -145,6 +151,12 @@ namespace SudokuBlazor.Shared
 
         public void ToggleCenterMark(int cellIndex, int value)
         {
+            if (value < 1 || value > 9)
+            {
+                ClearCell(cellIndex);
+                return;
+            }
+
             if (cellValues[cellIndex] != 0)
             {
                 return;
