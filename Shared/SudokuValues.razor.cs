@@ -75,7 +75,11 @@ namespace SudokuBlazor.Shared
                 return;
             }
 
-            ClearCell(cellIndex);
+            if (cellValues[cellIndex] == 0)
+            {
+                ClearPencilmarkVisuals(cellIndex);
+            }
+
             cellValues[cellIndex] = value;
             cellText[(cellIndex, 0, 0)] = new Text(
                 x: (cellIndex % 9 + 0.5) * cellRectWidth,
@@ -220,6 +224,9 @@ namespace SudokuBlazor.Shared
                 cellText.Remove((cellIndex, 0, 0));
                 cellValues[cellIndex] = 0;
                 SetDirty();
+                ReRenderCenterMarks(cellIndex);
+                ReRenderCornerMarks(cellIndex);
+                return;
             }
 
             if (cellCornerMarks[cellIndex] != 0)
@@ -240,6 +247,31 @@ namespace SudokuBlazor.Shared
                 }
                 cellCenterMarks[cellIndex] = 0;
                 SetDirty();
+            }
+        }
+
+        public void ClearPencilmarkVisuals(int cellIndex)
+        {
+            if (cellCornerMarks[cellIndex] != 0)
+            {
+                for (int v = 1; v <= 9; v++)
+                {
+                    if (cellText.Remove((cellIndex, 1, v)))
+                    {
+                        SetDirty();
+                    }
+                }
+            }
+
+            if (cellCenterMarks[cellIndex] != 0)
+            {
+                for (int v = 1; v <= 9; v++)
+                {
+                    if (cellText.Remove((cellIndex, 2, v)))
+                    {
+                        SetDirty();
+                    }
+                }
             }
         }
 
