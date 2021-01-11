@@ -1,0 +1,7 @@
+﻿@foreach (var rect in colorRects)
+{
+    if (rect != null)
+    {
+        <rect @key="rect" x="@rect.x" y="@rect.y" width="@rect.width" height="@rect.height" fill-opacity="@rect.opacity" style="fill:@rect.color;stroke-width:@rect.strokeWidth;" stroke="#000"/>
+    }
+}

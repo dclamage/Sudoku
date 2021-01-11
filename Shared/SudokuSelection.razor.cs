@@ -155,7 +155,7 @@ namespace SudokuBlazor.Shared
             width: cellRectWidth,
             height: cellRectWidth,
             strokeWidth: 0.0,
-            opacity: 0.3
+            opacity: 0.5
         );
 
         private bool AdjustModifiers(ref bool controlDown, ref bool shiftDown, ref bool altDown)

@@ -28,6 +28,7 @@ namespace SudokuBlazor.Pages
         private double inputLastY = 0.0;
 
         // Components
+        private SudokuColoring coloring;
         private SudokuSelection selection;
         private SudokuValues values;
         private SudokuKeypad keypad;
@@ -256,10 +257,7 @@ namespace SudokuBlazor.Pages
             switch (keyCodeType)
             {
                 case KeyCodeType.DeleteCell:
-                    foreach (int cellIndex in selection.SelectedCellIndices())
-                    {
-                        values.ClearCell(cellIndex);
-                    }
+                    CellValueEntered(0);
                     return;
                 case KeyCodeType.A:
                     if (e.CtrlKey)
@@ -300,6 +298,15 @@ namespace SudokuBlazor.Pages
 
         private void CellValueEntered(int value)
         {
+            if (value == 0 && keypad.CurrentMarkMode != SudokuKeypad.MarkMode.Color)
+            {
+                foreach (int cellIndex in selection.SelectedCellIndices())
+                {
+                    values.ClearCell(cellIndex);
+                }
+                return;
+            }
+
             switch (keypad.CurrentMarkMode)
             {
                 case SudokuKeypad.MarkMode.Fill:
@@ -321,6 +328,10 @@ namespace SudokuBlazor.Pages
                     }
                     break;
                 case SudokuKeypad.MarkMode.Color:
+                    foreach (int cellIndex in selection.SelectedCellIndices())
+                    {
+                        coloring.ColorCell(cellIndex, keypad.GetColorHexValue(value));
+                    }
                     break;
             }
             

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
+using SudokuBlazor.Models;
 
 namespace SudokuBlazor.Shared
 {
@@ -28,11 +29,31 @@ namespace SudokuBlazor.Shared
                 ColorModePressed(value);
             }
         }
+        public string GetColorHexValue(int colorIndex)
+        {
+            if (colorIndex <= 0 || colorIndex - 1 >= colors.Count)
+            {
+                return null;
+            }
+            return colors[colorIndex - 1].HexValue;
+        }
 
         // State
         private bool isDirty = true;
         private readonly Color[] modeButtonColors = new Color[] { Color.Success, Color.Primary, Color.Primary, Color.Primary };
         private MarkMode currentMarkMode = MarkMode.Fill;
+        private readonly List<ColorInfo> colors = new List<ColorInfo>
+        {
+            new ColorInfo("Silver", "#cbcbcb"),
+            new ColorInfo("Tangerine", "#ff8080"),
+            new ColorInfo("Orange", "#ffa865"), 
+            new ColorInfo("Lime", "#b1ff60"), 
+            new ColorInfo("Green", "#3fff55"), 
+            new ColorInfo("Aquamarine", "#89fff2"),
+            new ColorInfo("Malibu", "#82c3ff"),
+            new ColorInfo("Mauve", "#d391ff"), 
+            new ColorInfo("Blush", "#ff7bd9"), 
+        };
 
         // Components
         private ElementReference outerDiv;
