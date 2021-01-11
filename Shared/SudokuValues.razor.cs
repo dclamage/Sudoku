@@ -19,6 +19,7 @@ namespace SudokuBlazor.Shared
         // State
         private bool isDirty = true;
         private readonly Dictionary<(int, int, int), Text> cellText = new Dictionary<(int, int, int), Text>();
+        private readonly bool[] cellIsGiven = new bool[81];
         private readonly int[] cellValues = new int[81];
         private readonly uint[] cellCenterMarks = new uint[81];
         private readonly uint[] cellCornerMarks = new uint[81];
@@ -122,6 +123,20 @@ namespace SudokuBlazor.Shared
             }
         }
 
+        public void SetGiven(int cellIndex, int value)
+        {
+            if (value < 1 || value > 9)
+            {
+                return;
+            }
+            ClearCell(cellIndex, fullClear: true);
+
+            cellIsGiven[cellIndex] = true;
+            cellValues[cellIndex] = value;
+            cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, value, "#000");
+            SetDirty();
+        }
+
         public bool SetCellValue(int cellIndex, int value)
         {
             if (value < 1 || value > 9)
@@ -129,7 +144,7 @@ namespace SudokuBlazor.Shared
                 return ClearCell(cellIndex);
             }
 
-            if (cellValues[cellIndex] == value)
+            if (cellIsGiven[cellIndex] || cellValues[cellIndex] == value)
             {
                 return false;
             }
@@ -140,17 +155,19 @@ namespace SudokuBlazor.Shared
             }
 
             cellValues[cellIndex] = value;
-            cellText[(cellIndex, 0, 0)] = new Text(
-                x: (cellIndex % 9 + 0.5) * cellRectWidth,
-                y: (cellIndex / 9 + 0.5) * cellRectWidth + (cellRectWidth - valueFontSize) / 4.0,
-                fontSize: valueFontSize,
-                fontFamily: fontFamily,
-                color: "#000",
-                text: value.ToString()
-            );
+            cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, value, "#575757");
             SetDirty();
             return true;
         }
+
+        private static Text CreateFilledText(int cellIndex, int value, string color) => new Text(
+            x: (cellIndex % 9 + 0.5) * cellRectWidth,
+            y: (cellIndex / 9 + 0.5) * cellRectWidth + (cellRectWidth - valueFontSize) / 4.0,
+            fontSize: valueFontSize,
+            fontFamily: fontFamily,
+            color: color,
+            text: value.ToString()
+        );
 
         public bool ToggleCornerMark(int cellIndex, int value)
         {
@@ -159,7 +176,7 @@ namespace SudokuBlazor.Shared
                 return ClearCell(cellIndex);
             }
 
-            if (cellValues[cellIndex] != 0)
+            if (cellIsGiven[cellIndex] || cellValues[cellIndex] != 0)
             {
                 return false;
             }
@@ -220,7 +237,7 @@ namespace SudokuBlazor.Shared
                 return ClearCell(cellIndex);
             }
 
-            if (cellValues[cellIndex] != 0)
+            if (cellIsGiven[cellIndex] || cellValues[cellIndex] != 0)
             {
                 return false;
             }
@@ -277,8 +294,13 @@ namespace SudokuBlazor.Shared
             }
         }
 
-        public bool ClearCell(int cellIndex)
+        public bool ClearCell(int cellIndex, bool fullClear = false)
         {
+            if (cellIsGiven[cellIndex])
+            {
+                return false;
+            }
+
             if (cellValues[cellIndex] != 0)
             {
                 cellText.Remove((cellIndex, 0, 0));
@@ -286,7 +308,10 @@ namespace SudokuBlazor.Shared
                 SetDirty();
                 ReRenderCenterMarks(cellIndex);
                 ReRenderCornerMarks(cellIndex);
-                return true;
+                if (!fullClear)
+                {
+                    return true;
+                }
             }
 
             bool hadChange = false;

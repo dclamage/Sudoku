@@ -12,6 +12,10 @@ namespace SudokuBlazor.Pages
 {
     partial class Index
     {
+        // Parameters
+        [Parameter]
+        public string Givens { get; set; }
+
         // Element References
         private ElementReference sudokusvg;
 
@@ -36,6 +40,11 @@ namespace SudokuBlazor.Pages
         // Services
         private readonly UndoHistory undoHistory = new UndoHistory();
 
+        protected override void OnInitialized()
+        {
+            Givens ??= "";
+        }
+
         protected override void OnAfterRender(bool firstRender)
         {
             if (firstRender)
@@ -43,6 +52,18 @@ namespace SudokuBlazor.Pages
                 keypad.NumpadPressedAction = NumpadKeyPressed;
                 keypad.UndoPressedAction = Undo;
                 keypad.RedoPressedAction = Redo;
+
+                if (Givens.Length == 81)
+                {
+                    for (int cellIndex = 0; cellIndex < 81; cellIndex++)
+                    {
+                        char givenChar = Givens[cellIndex];
+                        if (char.IsDigit(givenChar) && givenChar > '0')
+                        {
+                            values.SetGiven(cellIndex, givenChar - '0');
+                        }
+                    }
+                }
 
                 StoreSnapshot();
             }
