@@ -62,17 +62,76 @@ namespace SudokuBlazor.Shared
             StateHasChanged();
         }
 
-        public void SetCellValue(int cellIndex, int value)
+        private record Snapshot(int[] CellValues, uint[] CellCornerMarks, uint[] CellCenterMarks);
+
+        public object TakeSnapshot()
+        {
+            return new Snapshot(
+                (int[])cellValues.Clone(),
+                (uint[])cellCornerMarks.Clone(),
+                (uint[])cellCenterMarks.Clone()
+            );
+        }
+
+        public void RestoreSnapshot(object snapshotObj)
+        {
+            if (snapshotObj != null && snapshotObj is Snapshot snapshot)
+            {
+                for (int cellIndex = 0; cellIndex < 81; cellIndex++)
+                {
+                    if (cellValues[cellIndex] != snapshot.CellValues[cellIndex])
+                    {
+                        SetCellValue(cellIndex, snapshot.CellValues[cellIndex]);
+                        SetDirty();
+                    }
+
+                    uint prevCornerMarks = cellCornerMarks[cellIndex];
+                    uint newCornerMarks = snapshot.CellCornerMarks[cellIndex];
+                    if (prevCornerMarks != newCornerMarks)
+                    {
+                        cellCornerMarks[cellIndex] = newCornerMarks;
+                        if (cellValues[cellIndex] == 0)
+                        {
+                            for (int value = 1; value <= 9; value++)
+                            {
+                                cellText.Remove((cellIndex, 1, value));
+                            }
+
+                            ReRenderCornerMarks(cellIndex);
+                            SetDirty();
+                        }
+                    }
+
+                    uint prevCenterMarks = cellCenterMarks[cellIndex];
+                    uint newCenterMarks = snapshot.CellCenterMarks[cellIndex];
+                    if (prevCenterMarks != newCenterMarks)
+                    {
+                        cellCenterMarks[cellIndex] = newCenterMarks;
+                        if (cellValues[cellIndex] == 0)
+                        {
+                            for (int value = 1; value <= 9; value++)
+                            {
+                                cellText.Remove((cellIndex, 2, value));
+                            }
+
+                            ReRenderCenterMarks(cellIndex);
+                            SetDirty();
+                        }
+                    }
+                }
+            }
+        }
+
+        public bool SetCellValue(int cellIndex, int value)
         {
             if (value < 1 || value > 9)
             {
-                ClearCell(cellIndex);
-                return;
+                return ClearCell(cellIndex);
             }
 
             if (cellValues[cellIndex] == value)
             {
-                return;
+                return false;
             }
 
             if (cellValues[cellIndex] == 0)
@@ -90,19 +149,19 @@ namespace SudokuBlazor.Shared
                 text: value.ToString()
             );
             SetDirty();
+            return true;
         }
 
-        public void ToggleCornerMark(int cellIndex, int value)
+        public bool ToggleCornerMark(int cellIndex, int value)
         {
             if (value < 1 || value > 9)
             {
-                ClearCell(cellIndex);
-                return;
+                return ClearCell(cellIndex);
             }
 
             if (cellValues[cellIndex] != 0)
             {
-                return;
+                return false;
             }
 
             uint valueMask = 1u << (value - 1);
@@ -118,6 +177,7 @@ namespace SudokuBlazor.Shared
 
             ReRenderCornerMarks(cellIndex);
             SetDirty();
+            return true;
         }
 
         protected void ReRenderCornerMarks(int cellIndex)
@@ -153,17 +213,16 @@ namespace SudokuBlazor.Shared
             }
         }
 
-        public void ToggleCenterMark(int cellIndex, int value)
+        public bool ToggleCenterMark(int cellIndex, int value)
         {
             if (value < 1 || value > 9)
             {
-                ClearCell(cellIndex);
-                return;
+                return ClearCell(cellIndex);
             }
 
             if (cellValues[cellIndex] != 0)
             {
-                return;
+                return false;
             }
 
             uint valueMask = 1u << (value - 1);
@@ -179,6 +238,7 @@ namespace SudokuBlazor.Shared
 
             ReRenderCenterMarks(cellIndex);
             SetDirty();
+            return true;
         }
 
         protected void ReRenderCenterMarks(int cellIndex)
@@ -217,7 +277,7 @@ namespace SudokuBlazor.Shared
             }
         }
 
-        public void ClearCell(int cellIndex)
+        public bool ClearCell(int cellIndex)
         {
             if (cellValues[cellIndex] != 0)
             {
@@ -226,9 +286,10 @@ namespace SudokuBlazor.Shared
                 SetDirty();
                 ReRenderCenterMarks(cellIndex);
                 ReRenderCornerMarks(cellIndex);
-                return;
+                return true;
             }
 
+            bool hadChange = false;
             if (cellCornerMarks[cellIndex] != 0)
             {
                 for (int v = 1; v <= 9; v++)
@@ -237,6 +298,7 @@ namespace SudokuBlazor.Shared
                 }
                 cellCornerMarks[cellIndex] = 0;
                 SetDirty();
+                hadChange = true;
             }
 
             if (cellCenterMarks[cellIndex] != 0)
@@ -247,7 +309,10 @@ namespace SudokuBlazor.Shared
                 }
                 cellCenterMarks[cellIndex] = 0;
                 SetDirty();
+                hadChange = true;
             }
+
+            return hadChange;
         }
 
         public void ClearPencilmarkVisuals(int cellIndex)

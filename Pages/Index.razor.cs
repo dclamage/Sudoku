@@ -33,11 +33,18 @@ namespace SudokuBlazor.Pages
         private SudokuValues values;
         private SudokuKeypad keypad;
 
+        // Services
+        private readonly UndoHistory undoHistory = new UndoHistory();
+
         protected override void OnAfterRender(bool firstRender)
         {
             if (firstRender)
             {
                 keypad.NumpadPressedAction = NumpadKeyPressed;
+                keypad.UndoPressedAction = Undo;
+                keypad.RedoPressedAction = Redo;
+
+                StoreSnapshot();
             }
         }
 
@@ -54,9 +61,9 @@ namespace SudokuBlazor.Pages
         protected async Task SelectCellAtLocation(double clientX, double clientY, bool controlDown, bool shiftDown, bool altDown)
         {
             var infoFromJs = await JS.InvokeAsync<string>("getSVG_XY", sudokusvg, clientX, clientY);
-            var values = infoFromJs.Split(" ");
-            double x = double.Parse(values[0]);
-            double y = double.Parse(values[1]);
+            var xysplit = infoFromJs.Split(" ");
+            double x = double.Parse(xysplit[0]);
+            double y = double.Parse(xysplit[1]);
 
             int i = (int)Math.Floor(y / cellRectWidth);
             int j = (int)Math.Floor(x / cellRectWidth);
@@ -210,6 +217,8 @@ namespace SudokuBlazor.Pages
             DeleteCell,
             Value,
             A,
+            Y,
+            Z,
             MoveUp,
             MoveDown,
             MoveLeft,
@@ -227,8 +236,12 @@ namespace SudokuBlazor.Pages
                 case "Digit0":
                 case "Numpad0":
                     return (KeyCodeType.DeleteCell, 0);
-                case "KeyA": // a
+                case "KeyA":
                     return (KeyCodeType.A, -1);
+                case "KeyY":
+                    return (KeyCodeType.Y, -1);
+                case "KeyZ":
+                    return (KeyCodeType.Z, -1);
                 case "ArrowUp":
                     return (KeyCodeType.MoveUp, -1);
                 case "ArrowDown":
@@ -265,6 +278,18 @@ namespace SudokuBlazor.Pages
                         selection.SelectAll();
                     }
                     return;
+                case KeyCodeType.Y:
+                    if (e.CtrlKey)
+                    {
+                        Redo();
+                    }
+                    return;
+                case KeyCodeType.Z:
+                    if (e.CtrlKey)
+                    {
+                        Undo();
+                    }
+                    return;
                 case KeyCodeType.Value:
                     CellValueEntered(value);
                     return;
@@ -298,43 +323,76 @@ namespace SudokuBlazor.Pages
 
         private void CellValueEntered(int value)
         {
+            bool hasChange = false;
             if (value == 0 && keypad.CurrentMarkMode != SudokuKeypad.MarkMode.Color)
             {
                 foreach (int cellIndex in selection.SelectedCellIndices())
                 {
-                    values.ClearCell(cellIndex);
+                    hasChange |= values.ClearCell(cellIndex);
                 }
-                return;
             }
-
-            switch (keypad.CurrentMarkMode)
+            else
             {
-                case SudokuKeypad.MarkMode.Fill:
-                    foreach (int cellIndex in selection.SelectedCellIndices())
-                    {
-                        values.SetCellValue(cellIndex, value);
-                    }
-                    break;
-                case SudokuKeypad.MarkMode.Corner:
-                    foreach (int cellIndex in selection.SelectedCellIndices())
-                    {
-                        values.ToggleCornerMark(cellIndex, value);
-                    }
-                    break;
-                case SudokuKeypad.MarkMode.Center:
-                    foreach (int cellIndex in selection.SelectedCellIndices())
-                    {
-                        values.ToggleCenterMark(cellIndex, value);
-                    }
-                    break;
-                case SudokuKeypad.MarkMode.Color:
-                    foreach (int cellIndex in selection.SelectedCellIndices())
-                    {
-                        coloring.ColorCell(cellIndex, keypad.GetColorHexValue(value));
-                    }
-                    break;
+                switch (keypad.CurrentMarkMode)
+                {
+                    case SudokuKeypad.MarkMode.Fill:
+                        foreach (int cellIndex in selection.SelectedCellIndices())
+                        {
+                            hasChange |= values.SetCellValue(cellIndex, value);
+                        }
+                        break;
+                    case SudokuKeypad.MarkMode.Corner:
+                        foreach (int cellIndex in selection.SelectedCellIndices())
+                        {
+                            hasChange |= values.ToggleCornerMark(cellIndex, value);
+                        }
+                        break;
+                    case SudokuKeypad.MarkMode.Center:
+                        foreach (int cellIndex in selection.SelectedCellIndices())
+                        {
+                            hasChange |= values.ToggleCenterMark(cellIndex, value);
+                        }
+                        break;
+                    case SudokuKeypad.MarkMode.Color:
+                        foreach (int cellIndex in selection.SelectedCellIndices())
+                        {
+                            hasChange |= coloring.ColorCell(cellIndex, keypad.GetColorHexValue(value));
+                        }
+                        break;
+                }
             }
-            
+            if (hasChange)
+            {
+                StoreSnapshot();
+            }
+        }
+
+        private void StoreSnapshot()
+        {
+            undoHistory.BeginPendingSnapshot();
+            undoHistory.StorePendingSnapshotData("values", values.TakeSnapshot());
+            undoHistory.StorePendingSnapshotData("coloring", coloring.TakeSnapshot());
+            undoHistory.CommitPendingSnapshot();
+        }
+
+        private void Undo()
+        {
+            var snapshotData = undoHistory.Undo();
+            if (snapshotData != null)
+            {
+                values.RestoreSnapshot(snapshotData["values"]);
+                coloring.RestoreSnapshot(snapshotData["coloring"]);
+            }
+        }
+
+        private void Redo()
+        {
+            var snapshotData = undoHistory.Redo();
+            if (snapshotData != null)
+            {
+                values.RestoreSnapshot(snapshotData["values"]);
+                coloring.RestoreSnapshot(snapshotData["coloring"]);
+            }
         }
 
         private async Task<BoundingClientRect> GetBoundingClientRect(ElementReference element)

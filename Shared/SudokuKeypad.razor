@@ -123,4 +123,32 @@ else
         </MudTooltip>
     </div>
 }
+
+<MudDivider DividerType="DividerType.Middle" Class="my-6"/>
+
+    <div class="d-flex justify-center">
+        <MudTooltip Text="Undo">
+            <MudFabExt
+                @onmousedown:preventDefault=true
+                Class="ma-1 px-2 rounded numpad-button"
+                Color="Color.Secondary"
+                DisableElevation="true"
+                Icon="@Icons.Material.Undo"
+                Size="Size.Large"
+                IconSize="Size.Large"
+                OnClick="@Undo" />
+        </MudTooltip>
+        <MudTooltip Text="Redo">
+            <MudFabExt
+                @onmousedown:preventDefault=true
+                Class="ma-1 px-2 rounded numpad-button"
+                Color="Color.Secondary"
+                DisableElevation="true"
+                Icon="@Icons.Material.Redo"
+                Size="Size.Large"
+                IconSize="Size.Large"
+                OnClick="@Redo" />
+        </MudTooltip>
+    </div>
+
 </div>

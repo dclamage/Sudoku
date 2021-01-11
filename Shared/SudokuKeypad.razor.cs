@@ -21,6 +21,8 @@ namespace SudokuBlazor.Shared
             Max
         }
         public Action<int> NumpadPressedAction { get; set; }
+        public Action UndoPressedAction { get; set; }
+        public Action RedoPressedAction { get; set; }
         public MarkMode CurrentMarkMode
         {
             get => currentMarkMode;
@@ -97,6 +99,16 @@ namespace SudokuBlazor.Shared
                 modeButtonColors[(int)mode] = mode == markMode ? Color.Success : Color.Primary;
             }
             SetDirty();
+        }
+
+        protected void Undo()
+        {
+            UndoPressedAction?.Invoke();
+        }
+
+        protected void Redo()
+        {
+            RedoPressedAction?.Invoke();
         }
 
         // Icons (See the RawAssets folder for the original svgs)

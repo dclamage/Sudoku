@@ -33,8 +33,27 @@ namespace SudokuBlazor.Shared
             StateHasChanged();
         }
 
-        public void ColorCell(int cellIndex, string color)
+        private record Snapshot(string[] colors);
+
+        public object TakeSnapshot()
         {
+            return new Snapshot(colorRects.Select(rect => rect?.color ?? null).ToArray());
+        }
+
+        public void RestoreSnapshot(object snapshotObj)
+        {
+            if (snapshotObj != null && snapshotObj is Snapshot snapshot)
+            {
+                for (int i = 0; i < 81; i++)
+                {
+                    ColorCell(i, snapshot.colors[i]);
+                }
+            }
+        }
+
+        public bool ColorCell(int cellIndex, string color)
+        {
+            bool hadChange = false;
             if (cellIndex >= 0 && cellIndex < colorRects.Length)
             {
                 if (string.IsNullOrWhiteSpace(color))
@@ -43,6 +62,7 @@ namespace SudokuBlazor.Shared
                     {
                         colorRects[cellIndex] = null;
                         SetDirty();
+                        hadChange = true;
                     }
                 }
                 else if(colorRects[cellIndex] == null || colorRects[cellIndex].color != color)
@@ -51,8 +71,10 @@ namespace SudokuBlazor.Shared
                     int j = cellIndex % 9;
                     colorRects[cellIndex] = CreateColorRect(i, j, color);
                     SetDirty();
+                    hadChange = true;
                 }
-            }
+           }
+            return hadChange;
         }
 
         protected static Rect CreateColorRect(int i, int j, string color) => new Rect(
