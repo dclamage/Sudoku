@@ -15,6 +15,9 @@ namespace SudokuBlazor.Shared
         private const double markupFontSize = cellRectWidth * 1.0 / 4.0;
         private const double fontWidthHeightRatio = 0.6;
         private const string fontFamily = "sans-serif";
+        private const string givenColor = "#000";
+        private const string filledColor = "#575757";
+        private const string conflictedColor = "#ee0000";
 
         // State
         private bool isDirty = true;
@@ -133,8 +136,9 @@ namespace SudokuBlazor.Shared
 
             cellIsGiven[cellIndex] = true;
             cellValues[cellIndex] = value;
-            cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, value, "#000");
+            cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, value, givenColor);
             SetDirty();
+            CheckConflicts();
         }
 
         public bool SetCellValue(int cellIndex, int value)
@@ -155,8 +159,9 @@ namespace SudokuBlazor.Shared
             }
 
             cellValues[cellIndex] = value;
-            cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, value, "#575757");
+            cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, value, filledColor);
             SetDirty();
+            CheckConflicts();
             return true;
         }
 
@@ -223,7 +228,7 @@ namespace SudokuBlazor.Shared
                     y: cellStartY + offsetY,
                     fontSize: markupFontSize,
                     fontFamily: fontFamily,
-                    color: "#555",
+                    color: filledColor,
                     text: value.ToString()
                 );
                 cornerIndex++;
@@ -306,6 +311,7 @@ namespace SudokuBlazor.Shared
                 cellText.Remove((cellIndex, 0, 0));
                 cellValues[cellIndex] = 0;
                 SetDirty();
+                CheckConflicts();
                 ReRenderCenterMarks(cellIndex);
                 ReRenderCornerMarks(cellIndex);
                 if (!fullClear)
@@ -368,6 +374,123 @@ namespace SudokuBlazor.Shared
         public int GetCellValue(int cellIndex)
         {
             return cellValues[cellIndex];
+        }
+
+        public void CheckConflicts()
+        {
+            int[] digitCount = new int[9];
+            bool[] cellIsConflicted = new bool[81];
+
+            // Rows
+            for (int i = 0; i < 9; i++)
+            {
+                Array.Clear(digitCount, 0, 9);
+                for (int j = 0; j < 9; j++)
+                {
+                    int cellIndex = i * 9 + j;
+                    int curValue = cellValues[cellIndex];
+                    if (curValue > 0)
+                    {
+                        digitCount[curValue - 1]++;
+                    }
+                }
+                for (int j = 0; j < 9; j++)
+                {
+                    int cellIndex = i * 9 + j;
+                    int curValue = cellValues[cellIndex];
+                    if (curValue > 0)
+                    {
+                        if (digitCount[curValue - 1] > 1)
+                        {
+                            cellIsConflicted[cellIndex] = true;
+                        }
+                    }
+                }
+            }
+
+            // Cols
+            for (int j = 0; j < 9; j++)
+            {
+                Array.Clear(digitCount, 0, 9);
+                for (int i = 0; i < 9; i++)
+                {
+                    int cellIndex = i * 9 + j;
+                    int curValue = cellValues[cellIndex];
+                    if (curValue > 0)
+                    {
+                        digitCount[curValue - 1]++;
+                    }
+                }
+                for (int i = 0; i < 9; i++)
+                {
+                    int cellIndex = i * 9 + j;
+                    int curValue = cellValues[cellIndex];
+                    if (curValue > 0)
+                    {
+                        if (digitCount[curValue - 1] > 1)
+                        {
+                            cellIsConflicted[cellIndex] = true;
+                        }
+                    }
+                }
+            }
+
+            // Boxes
+            const int boxRowSpan = 27;
+            for (int bi = 0; bi < 3; bi++)
+            {
+                for (int bj = 0; bj < 3; bj++)
+                {
+                    int baseBoxIndex = (bi * boxRowSpan) + (bj * 3);
+                    Array.Clear(digitCount, 0, 9);
+                    for (int i = 0; i < 3; i++)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            int cellIndex = baseBoxIndex + i * 9 + j;
+                            int curValue = cellValues[cellIndex];
+                            if (curValue > 0)
+                            {
+                                digitCount[curValue - 1]++;
+                            }
+                        }
+                    }
+                    for (int i = 0; i < 3; i++)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            int cellIndex = baseBoxIndex + i * 9 + j;
+                            int curValue = cellValues[cellIndex];
+                            if (curValue > 0)
+                            {
+                                if (digitCount[curValue - 1] > 1)
+                                {
+                                    cellIsConflicted[cellIndex] = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < 81; i++)
+            {
+                if (cellValues[i] != 0)
+                {
+                    SetConflict(i, cellIsConflicted[i]);
+                }
+            }
+        }
+
+        public void SetConflict(int cellIndex, bool conflict)
+        {
+            Text existingText = cellText[(cellIndex, 0, 0)];
+            string desiredColor = conflict ? conflictedColor : (cellIsGiven[cellIndex] ? givenColor : filledColor);
+            if (existingText.color != desiredColor)
+            {
+                cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, cellValues[cellIndex], desiredColor);
+                SetDirty();
+            }
         }
     }
 }
