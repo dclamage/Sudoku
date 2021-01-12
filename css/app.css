@@ -4,9 +4,9 @@
 }
 
 svg.sudoku {
-    height: calc(min(95vw, 95vh - var(--sidebar-height) * 1px));
-    width: calc(min(95vw, 95vh - var(--sidebar-height) * 1px));
-    margin: 0;
+    height: calc(min(95vw, 95vh - var(--sidebar-height) * 1px) - 40px);
+    width: calc(min(95vw, 95vh - var(--sidebar-height) * 1px) - 40px);
+    margin: 20px;
     padding: 0;
     cursor: default;
     touch-action: none;
@@ -26,9 +26,9 @@ svg.sudoku {
 
 @media(min-width:600px) {
     svg.sudoku {
-        height: calc(min(95vw - var(--sidebar-width) * 1px, 95vh));
-        width: calc(min(95vw - var(--sidebar-width) * 1px, 95vh));
-        margin: 0;
+        height: calc(min(95vw - var(--sidebar-width) * 1px, 95vh) - 40px);
+        width: calc(min(95vw - var(--sidebar-width) * 1px, 95vh) - 40px);
+        margin: 20px;
         padding: 0;
         cursor: default;
         touch-action: none;
