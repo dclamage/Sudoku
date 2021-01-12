@@ -1,20 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using SudokuBlazor.Models;
 
 namespace SudokuBlazor.Shared
 {
-    partial class SudokuGrid
+    partial class SudokuGrid : ComponentRenderOnce
     {
         // Constants
-        private const double boxRectWidth = SudokuConstants.boxRectWidth;
-        private const double cellRectWidth = SudokuConstants.cellRectWidth;
+        private const double boxStrokeWidth = 6.0;
+        private const double cellStrokeWidth = 2.0;
+        private const double borderWidth = SudokuConstants.viewboxSize - boxStrokeWidth;
+        private const double innerBoxWidth = (SudokuConstants.viewboxSize - boxStrokeWidth) / 3.0;
+        private const double innerCellWidth = (SudokuConstants.viewboxSize - cellStrokeWidth) / 9.0;
 
         // State
-        private readonly List<Rect> rects = new List<Rect>();
-        private bool rendered = false;
+        private List<Path> paths = new List<Path>();
 
         protected override void OnInitialized()
         {
@@ -22,49 +25,27 @@ namespace SudokuBlazor.Shared
             base.OnInitialized();
         }
 
-        protected override bool ShouldRender()
-        {
-            if (!rendered)
-            {
-                rendered = true;
-                return true;
-            }
-            return false;
-        }
-
         protected void InitRects()
         {
-            if (rects.Count == 0)
+            if (paths.Count == 0)
             {
-                for (int i = 0; i < 9; i++)
+                StringBuilder cellPath = new StringBuilder();
+                StringBuilder boxPath = new StringBuilder();
+                boxPath.Append($"M0,0H{borderWidth}V{borderWidth}H0Z");
+                for (int i = 1; i < 9; i++)
                 {
-                    for (int j = 0; j < 9; j++)
+                    if ((i % 3) != 0)
                     {
-                        rects.Add(new Rect(
-                            x: i * cellRectWidth,
-                            y: j * cellRectWidth,
-                            width: cellRectWidth,
-                            height: cellRectWidth,
-                            strokeWidth: 2.0,
-                            opacity: 0.0
-                        ));
+                        cellPath.Append($"M{0},{i * innerCellWidth}H{SudokuConstants.viewboxSize}M{i * innerCellWidth},{0}V{SudokuConstants.viewboxSize}");
+                    }
+                    else
+                    {
+                        int bi = i / 3;
+                        boxPath.Append($"M{0},{bi * innerBoxWidth}H{SudokuConstants.viewboxSize}M{bi * innerBoxWidth},{0}V{SudokuConstants.viewboxSize}");
                     }
                 }
-
-                for (int i = 0; i < 3; i++)
-                {
-                    for (int j = 0; j < 3; j++)
-                    {
-                        rects.Add(new Rect(
-                            x: i * boxRectWidth,
-                            y: j * boxRectWidth,
-                            width: boxRectWidth,
-                            height: boxRectWidth,
-                            strokeWidth: 6.0,
-                            opacity: 0.0
-                        ));
-                    }
-                }
+                paths.Add(new Path(cellPath.ToString(), cellStrokeWidth));
+                paths.Add(new Path(boxPath.ToString(), boxStrokeWidth));
             }
         }
     }

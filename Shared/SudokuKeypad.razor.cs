@@ -9,7 +9,7 @@ using SudokuBlazor.Models;
 
 namespace SudokuBlazor.Shared
 {
-    partial class SudokuKeypad
+    partial class SudokuKeypad : ComponentDirtyRender
     {
         // Public interface
         public enum MarkMode
@@ -41,7 +41,6 @@ namespace SudokuBlazor.Shared
         }
 
         // State
-        private bool isDirty = true;
         private readonly Color[] modeButtonColors = new Color[] { Color.Success, Color.Primary, Color.Primary, Color.Primary };
         private MarkMode currentMarkMode = MarkMode.Fill;
         private readonly List<ColorInfo> colors = new List<ColorInfo>
@@ -68,12 +67,6 @@ namespace SudokuBlazor.Shared
                 return true;
             }
             return false;
-        }
-
-        protected void SetDirty()
-        {
-            isDirty = true;
-            StateHasChanged();
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)

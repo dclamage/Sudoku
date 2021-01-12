@@ -4,7 +4,7 @@
 
 <div class="d-flex flex-column flex-sm-row justify-center">
     <div class="d-flex justify-center">
-        <svg @ref="sudokusvg" class="sudoku" viewBox="-10 -10 1020 1020"
+        <svg @ref="sudokusvg" class="sudoku" viewBox="0 0 @SudokuConstants.viewboxSize @SudokuConstants.viewboxSize"
             @onmousedown="@MouseDown"
             @onmousemove="@MouseMove"
             @onmouseup="@MouseUp"
@@ -24,7 +24,7 @@
             opacity="1.0"
             xmlns="http://www.w3.org/2000/svg">
 
-            <rect id="rect-sudoku-background" x="0" y="0" width="1000" height="1000" style="fill:#fff;stroke-width:6" stroke="#000" />
+            <rect id="rect-sudoku-background" x="0" y="0" width="@SudokuConstants.viewboxSize" height="@SudokuConstants.viewboxSize" fill="#fff" stroke="none" />
 
             <SudokuColoring @ref="coloring" />
 

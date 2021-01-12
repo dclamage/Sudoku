@@ -7,7 +7,7 @@ using SudokuBlazor.Models;
 
 namespace SudokuBlazor.Shared
 {
-    partial class SudokuValues
+    partial class SudokuValues : ComponentDirtyRender
     {
         // Constants
         private const double cellRectWidth = SudokuConstants.cellRectWidth;
@@ -20,7 +20,6 @@ namespace SudokuBlazor.Shared
         private const string conflictedColor = "#ee0000";
 
         // State
-        private bool isDirty = true;
         private readonly Dictionary<(int, int, int), Text> cellText = new Dictionary<(int, int, int), Text>();
         private readonly bool[] cellIsGiven = new bool[81];
         private readonly int[] cellValues = new int[81];
@@ -48,22 +47,6 @@ namespace SudokuBlazor.Shared
             cornerMarkOffsets[6] = (offsetX0, offsetY1);
             cornerMarkOffsets[7] = (offsetX1, offsetY1);
             cornerMarkOffsets[8] = (offsetX2, offsetY1);
-        }
-
-        protected override bool ShouldRender()
-        {
-            if (isDirty)
-            {
-                isDirty = false;
-                return true;
-            }
-            return false;
-        }
-
-        protected void SetDirty()
-        {
-            isDirty = true;
-            StateHasChanged();
         }
 
         private record Snapshot(int[] CellValues, uint[] CellCornerMarks, uint[] CellCenterMarks);

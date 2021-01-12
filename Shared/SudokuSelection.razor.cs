@@ -6,33 +6,17 @@ using SudokuBlazor.Models;
 
 namespace SudokuBlazor.Shared
 {
-    partial class SudokuSelection
+    partial class SudokuSelection : ComponentDirtyRender
     {
         // Constants
         private const double cellRectWidth = SudokuConstants.cellRectWidth;
+        private const string selectionColor = "#ffff99";
 
         // State
-        private bool isDirty = true;
         private int lastCellSelected = -1;
 
         // UI
         private readonly Rect[] selectionRects = new Rect[81];
-
-        protected override bool ShouldRender()
-        {
-            if (isDirty)
-            {
-                isDirty = false;
-                return true;
-            }
-            return false;
-        }
-
-        protected void SetDirty()
-        {
-            isDirty = true;
-            StateHasChanged();
-        }
 
         public void ResetLastSelectedCell()
         {
@@ -155,7 +139,8 @@ namespace SudokuBlazor.Shared
             width: cellRectWidth,
             height: cellRectWidth,
             strokeWidth: 0.0,
-            opacity: 0.5
+            opacity: 0.5,
+            color: selectionColor
         );
 
         private bool AdjustModifiers(ref bool controlDown, ref bool shiftDown, ref bool altDown)

@@ -1,39 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using SudokuBlazor.Models;
 
 namespace SudokuBlazor.Shared
 {
-    partial class SudokuColoring
+    partial class SudokuColoring : ComponentDirtyRender
     {
         // Constants
         private const double cellRectWidth = SudokuConstants.cellRectWidth;
 
-        // State
-        private bool isDirty = true;
-
         // UI
         private readonly Rect[] colorRects = new Rect[81];
 
-        protected override bool ShouldRender()
-        {
-            if (isDirty)
-            {
-                isDirty = false;
-                return true;
-            }
-            return false;
-        }
-
-        protected void SetDirty()
-        {
-            isDirty = true;
-            StateHasChanged();
-        }
-
-        private record Snapshot(string[] colors);
+        private record Snapshot(string[] Colors);
 
         public object TakeSnapshot()
         {
@@ -46,7 +24,7 @@ namespace SudokuBlazor.Shared
             {
                 for (int i = 0; i < 81; i++)
                 {
-                    ColorCell(i, snapshot.colors[i]);
+                    ColorCell(i, snapshot.Colors[i]);
                 }
             }
         }

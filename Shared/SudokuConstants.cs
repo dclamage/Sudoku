@@ -7,7 +7,8 @@ namespace SudokuBlazor.Shared
 {
     public static class SudokuConstants
     {
-        public const double cellRectWidth = 1000.0 / 9.0;
-        public const double boxRectWidth = 1000.0 / 3.0;
+        public const double viewboxSize = 1000.0;
+        public const double cellRectWidth = viewboxSize / 9.0;
+        public const double boxRectWidth = viewboxSize / 3.0;
     }
 }

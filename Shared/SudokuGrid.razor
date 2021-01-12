@@ -1,4 +1,6 @@
-﻿@foreach (var rect in rects)
+﻿@inherits ComponentRenderOnce
+
+@foreach (var path in paths)
 {
-    <rect @key="rect" x="@rect.x" y="@rect.y" width="@rect.width" height="@rect.height" fill-opacity="@rect.opacity" style="fill:#fff;stroke-width:@rect.strokeWidth;" stroke="#000"/>
+    <path d="@path.path" stroke-opacity="@path.opacity" fill="none" stroke-width="@path.strokeWidth" stroke="@path.color" stroke-linejoin="miter" transform="translate(@(path.strokeWidth * 0.5),@(path.strokeWidth * 0.5))"/>
 }

@@ -1,7 +1,11 @@
-﻿@foreach (var text in cellText.Values)
+﻿@inherits ComponentDirtyRender
+
+@foreach (var text in cellText.Values)
 {
     if (text != null)
     {
-        <text><text @key="text" x="@text.x" y="@text.y" font-size="@text.fontSize" font-family="@text.fontFamily" dominant-baseline="middle" text-anchor="middle" style="pointer-events: none; fill: @text.color">@text.text</text></text>
+        // The double <text> tag is because <text> is a special Blazor tag, so to put svg <text> it has to be enclosed in that special tag.
+        // https://stackoverflow.com/questions/64229877/how-to-add-svg-text-in-blazor-razor-file
+        <text><text @key="text" x="@text.x" y="@text.y" font-size="@text.fontSize" font-family="@text.fontFamily" dominant-baseline="middle" text-anchor="middle" fill="@text.color" style="pointer-events: none">@text.text</text></text>
     }
 }
