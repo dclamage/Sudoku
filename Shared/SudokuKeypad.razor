@@ -2,130 +2,130 @@
 @inject IJSRuntime JS;
 
 <div @ref="outerDiv">
-<div class="d-flex justify-center">
-    <MudTooltip Text="Fill Mode">
-        <MudFabExt
-            @onmousedown:preventDefault=true
-            Class="ma-1 px-2 rounded mode-button"
-            Color="@modeButtonColors[(int)MarkMode.Fill]"
-            DisableElevation="true"
-            Icon="@fillMarkIcon"
-            IconSize="Size.Large"
-            Size="Size.Large"
-            OnClick="@(() => ColorModePressed(MarkMode.Fill))" />
-    </MudTooltip>
-    <MudTooltip Text="Corner Mode">
-        <MudFabExt
-            @onmousedown:preventDefault=true
-            Class="ma-1 px-2 rounded mode-button"
-            Color="@modeButtonColors[(int)MarkMode.Corner]"
-            DisableElevation="true"
-            Icon="@cornerMarkIcon"
-            IconSize="Size.Large"
-            Size="Size.Large"
-            OnClick="@(() => ColorModePressed(MarkMode.Corner))" />
-    </MudTooltip>
-    <MudTooltip Text="Center Mode">
-        <MudFabExt
-            @onmousedown:preventDefault=true
-            Class="ma-1 px-2 rounded mode-button"
-            Color="@modeButtonColors[(int)MarkMode.Center]"
-            DisableElevation="true"
-            Icon="@centerMarkIcon"
-            IconSize="Size.Large"
-            Size="Size.Large"
-            OnClick="@(() => ColorModePressed(MarkMode.Center))" />
-    </MudTooltip>
-    <MudTooltip Text="Coloring Mode">
-        <MudFabExt
-            @onmousedown:preventDefault=true
-            Class="ma-1 px-2 rounded mode-button"
-            Color="@modeButtonColors[(int)MarkMode.Color]"
-            DisableElevation="true"
-            Icon="@Icons.Material.Palette"
-            IconSize="Size.Large"
-            Size="Size.Large"
-            OnClick="@(() => ColorModePressed(MarkMode.Color))" />
-    </MudTooltip>
-</div>
+    <div class="d-flex justify-center">
+        <MudTooltip Text="Fill Mode">
+            <MudFabExt
+                @onmousedown:preventDefault=true
+                Class="ma-1 px-2 rounded mode-button"
+                Color="@modeButtonColors[(int)MarkMode.Fill]"
+                DisableElevation="true"
+                Icon="@fillMarkIcon"
+                IconSize="Size.Large"
+                Size="Size.Large"
+                OnClick="@(() => ColorModePressed(MarkMode.Fill))" />
+        </MudTooltip>
+        <MudTooltip Text="Corner Mode">
+            <MudFabExt
+                @onmousedown:preventDefault=true
+                Class="ma-1 px-2 rounded mode-button"
+                Color="@modeButtonColors[(int)MarkMode.Corner]"
+                DisableElevation="true"
+                Icon="@cornerMarkIcon"
+                IconSize="Size.Large"
+                Size="Size.Large"
+                OnClick="@(() => ColorModePressed(MarkMode.Corner))" />
+        </MudTooltip>
+        <MudTooltip Text="Center Mode">
+            <MudFabExt
+                @onmousedown:preventDefault=true
+                Class="ma-1 px-2 rounded mode-button"
+                Color="@modeButtonColors[(int)MarkMode.Center]"
+                DisableElevation="true"
+                Icon="@centerMarkIcon"
+                IconSize="Size.Large"
+                Size="Size.Large"
+                OnClick="@(() => ColorModePressed(MarkMode.Center))" />
+        </MudTooltip>
+        <MudTooltip Text="Coloring Mode">
+            <MudFabExt
+                @onmousedown:preventDefault=true
+                Class="ma-1 px-2 rounded mode-button"
+                Color="@modeButtonColors[(int)MarkMode.Color]"
+                DisableElevation="true"
+                Icon="@Icons.Material.Palette"
+                IconSize="Size.Large"
+                Size="Size.Large"
+                OnClick="@(() => ColorModePressed(MarkMode.Color))" />
+        </MudTooltip>
+    </div>
 
-<MudDivider DividerType="DividerType.Middle" Class="my-6"/>
+    <MudDivider DividerType="DividerType.Middle" Class="my-3"/>
 
-@if (currentMarkMode != MarkMode.Color)
-{
-    @for(int row = 0; row < 3; row++)
+    @if (currentMarkMode != MarkMode.Color)
     {
-        int localRow = row;
-        <div class="d-flex justify-center">
-        @for(int i = 1; i <= 3; i++)
+        @for(int row = 0; row < 3; row++)
         {
-            int locali = i;
-            int value = localRow * 3 + locali;
-            <MudFab
-                @onmousedown:preventDefault=true
-                Class="ma-1 rounded numpad-button"
-                Variant="Variant.Filled"
-                Color="Color.Primary"
-                DisableElevation="true"
-                Size="Size.Large"
-                Label="@value.ToString()"
-                OnClick="@(() => NumpadButtonPressed(value))" />
-        }
-        </div>
-    }
-
-    <div class="d-flex justify-center">
-        <MudTooltip Text="Clear Cell Contents">
-            <MudFabExt
-                @onmousedown:preventDefault=true
-                Class="ma-1 px-2 rounded numpad-button"
-                Color="Color.Error"
-                DisableElevation="true"
-                Icon="@Icons.Material.Backspace"
-                Size="Size.Large"
-                IconSize="Size.Large"
-                OnClick="@(() => NumpadButtonPressed(0))" />
-        </MudTooltip>
-    </div>
-}
-else
-{
-    @for (int colorIndexIter = 0; colorIndexIter < colors.Count; colorIndexIter += 3)
-    {
-        int colorIndex = colorIndexIter;
-        <div class="d-flex justify-center">
-            @for(int colorSubIndex = 0; colorSubIndex < 3; colorSubIndex++)
+            int localRow = row;
+            <div class="d-flex justify-center">
+            @for(int i = 1; i <= 3; i++)
             {
-                int colorFinalIndex = colorIndex + colorSubIndex;
-                <MudTooltip Text="@colors[colorFinalIndex].Name">
-                    <MudFab
-                        @onmousedown:preventDefault=true
-                        Class="ma-1 rounded numpad-button"
-                        Style="@colors[colorFinalIndex].Style"
-                        DisableElevation="true"
-                        Size="Size.Large"
-                        OnClick="@(() => NumpadButtonPressed(colorFinalIndex + 1))" />
-                    </MudTooltip>
+                int locali = i;
+                int value = localRow * 3 + locali;
+                <MudFab
+                    @onmousedown:preventDefault=true
+                    Class="ma-1 rounded numpad-button"
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    DisableElevation="true"
+                    Size="Size.Large"
+                    Label="@value.ToString()"
+                    OnClick="@(() => NumpadButtonPressed(value))" />
             }
+            </div>
+        }
+
+        <div class="d-flex justify-center">
+            <MudTooltip Text="Clear Cell Contents">
+                <MudFabExt
+                    @onmousedown:preventDefault=true
+                    Class="ma-1 px-2 rounded numpad-button"
+                    Color="Color.Error"
+                    DisableElevation="true"
+                    Icon="@Icons.Material.Backspace"
+                    Size="Size.Large"
+                    IconSize="Size.Large"
+                    OnClick="@(() => NumpadButtonPressed(0))" />
+            </MudTooltip>
+        </div>
+    }
+    else
+    {
+        @for (int colorIndexIter = 0; colorIndexIter < colors.Count; colorIndexIter += 3)
+        {
+            int colorIndex = colorIndexIter;
+            <div class="d-flex justify-center">
+                @for(int colorSubIndex = 0; colorSubIndex < 3; colorSubIndex++)
+                {
+                    int colorFinalIndex = colorIndex + colorSubIndex;
+                    <MudTooltip Text="@colors[colorFinalIndex].Name">
+                        <MudFab
+                            @onmousedown:preventDefault=true
+                            Class="ma-1 rounded numpad-button"
+                            Style="@colors[colorFinalIndex].Style"
+                            DisableElevation="true"
+                            Size="Size.Large"
+                            OnClick="@(() => NumpadButtonPressed(colorFinalIndex + 1))" />
+                        </MudTooltip>
+                }
+            </div>
+        }
+
+        <div class="d-flex justify-center">
+            <MudTooltip Text="Clear Coloring">
+                <MudFabExt
+                    @onmousedown:preventDefault=true
+                    Class="ma-1 px-2 rounded numpad-button"
+                    Style="background-color: #ffffff;"
+                    DisableElevation="true"
+                    Icon="@Icons.Material.Backspace"
+                    Size="Size.Large"
+                    IconSize="Size.Large"
+                    OnClick="@(() => NumpadButtonPressed(0))" />
+            </MudTooltip>
         </div>
     }
 
-    <div class="d-flex justify-center">
-        <MudTooltip Text="Clear Coloring">
-            <MudFabExt
-                @onmousedown:preventDefault=true
-                Class="ma-1 px-2 rounded numpad-button"
-                Style="background-color: #ffffff;"
-                DisableElevation="true"
-                Icon="@Icons.Material.Backspace"
-                Size="Size.Large"
-                IconSize="Size.Large"
-                OnClick="@(() => NumpadButtonPressed(0))" />
-        </MudTooltip>
-    </div>
-}
-
-<MudDivider DividerType="DividerType.Middle" Class="my-6"/>
+    <MudDivider DividerType="DividerType.Middle" Class="my-3"/>
 
     <div class="d-flex justify-center">
         <MudTooltip Text="Undo">
