@@ -10,7 +10,7 @@ namespace SudokuBlazor.Shared
     partial class SudokuGrid : ComponentRenderOnce
     {
         // Constants
-        private const double boxStrokeWidth = 6.0;
+        private const double boxStrokeWidth = 8.0;
         private const double cellStrokeWidth = 2.0;
         private const double borderWidth = SudokuConstants.viewboxSize - boxStrokeWidth;
         private const double innerBoxWidth = (SudokuConstants.viewboxSize - boxStrokeWidth) / 3.0;

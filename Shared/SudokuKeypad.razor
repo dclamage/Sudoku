@@ -150,6 +150,17 @@
                 IconSize="Size.Large"
                 OnClick="@Redo" />
         </MudTooltip>
+        <MudTooltip Text="Save Screenshot">
+            <MudFabExt
+                @onmousedown:preventDefault=true
+                Class="ma-1 px-2 rounded numpad-button"
+                Color="Color.Secondary"
+                DisableElevation="true"
+                Icon="@Icons.Material.Photo"
+                Size="Size.Large"
+                IconSize="Size.Large"
+                OnClick="@SaveScreenshot" />
+        </MudTooltip>
     </div>
 
 </div>

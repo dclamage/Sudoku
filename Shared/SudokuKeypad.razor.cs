@@ -23,6 +23,7 @@ namespace SudokuBlazor.Shared
         public Action<int> NumpadPressedAction { get; set; }
         public Action UndoPressedAction { get; set; }
         public Action RedoPressedAction { get; set; }
+        public Func<Task> SaveScreenshotAsyncAction { get; set; }
         public MarkMode CurrentMarkMode
         {
             get => currentMarkMode;
@@ -102,6 +103,11 @@ namespace SudokuBlazor.Shared
         protected void Redo()
         {
             RedoPressedAction?.Invoke();
+        }
+
+        protected async void SaveScreenshot()
+        {
+            await SaveScreenshotAsyncAction?.Invoke();
         }
 
         // Icons (See the RawAssets folder for the original svgs)

@@ -52,6 +52,7 @@ namespace SudokuBlazor.Pages
                 keypad.NumpadPressedAction = NumpadKeyPressed;
                 keypad.UndoPressedAction = Undo;
                 keypad.RedoPressedAction = Redo;
+                keypad.SaveScreenshotAsyncAction = SaveScreenshot;
 
                 if (Givens.Length == 81)
                 {
@@ -414,6 +415,11 @@ namespace SudokuBlazor.Pages
                 values.RestoreSnapshot(snapshotData["values"]);
                 coloring.RestoreSnapshot(snapshotData["coloring"]);
             }
+        }
+
+        private async Task SaveScreenshot()
+        {
+            await JS.InvokeVoidAsync("doSaveSvgAsPng", sudokusvg, "SudokuScreenshot.png");
         }
 
         private async Task<BoundingClientRect> GetBoundingClientRect(ElementReference element)

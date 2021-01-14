@@ -6,7 +6,7 @@
 svg.sudoku {
     height: calc(min(95vw, 95vh - var(--sidebar-height) * 1px) - 40px);
     width: calc(min(95vw, 95vh - var(--sidebar-height) * 1px) - 40px);
-    margin: 20px;
+    margin: 0;
     padding: 0;
     cursor: default;
     touch-action: none;
@@ -28,7 +28,7 @@ svg.sudoku {
     svg.sudoku {
         height: calc(min(95vw - var(--sidebar-width) * 1px, 95vh) - 40px);
         width: calc(min(95vw - var(--sidebar-width) * 1px, 95vh) - 40px);
-        margin: 20px;
+        margin: 0;
         padding: 0;
         cursor: default;
         touch-action: none;
