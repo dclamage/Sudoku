@@ -16,4 +16,48 @@
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
+  <ItemGroup>
+    <TrimmerRootAssembly Include="System.Buffers" />
+    <TrimmerRootAssembly Include="System.Configuration" />
+    <TrimmerRootAssembly Include="System.Core" />
+    <TrimmerRootAssembly Include="System.Data.DataSetExtensions" />
+    <TrimmerRootAssembly Include="System.Data" />
+    <TrimmerRootAssembly Include="System.Diagnostics.Debug" />
+    <TrimmerRootAssembly Include="System.Diagnostics.DiagnosticSource" />
+    <TrimmerRootAssembly Include="System.Diagnostics.StackTrace" />
+    <TrimmerRootAssembly Include="System" />
+    <TrimmerRootAssembly Include="System.Dynamic.Runtime" />
+    <TrimmerRootAssembly Include="System.Globalization.Calendars" />
+    <TrimmerRootAssembly Include="System.Globalization" />
+    <TrimmerRootAssembly Include="System.Globalization.Extensions" />
+    <TrimmerRootAssembly Include="System.Linq.Queryable" />
+    <TrimmerRootAssembly Include="System.Numerics" />
+    <TrimmerRootAssembly Include="System.Numerics.Vectors" />
+    <TrimmerRootAssembly Include="System.Reflection" />
+    <TrimmerRootAssembly Include="System.Reflection.Emit.ILGeneration" />
+    <TrimmerRootAssembly Include="System.Reflection.Emit.Lightweight" />
+    <TrimmerRootAssembly Include="System.Reflection.Extensions" />
+    <TrimmerRootAssembly Include="System.Reflection.Metadata" />
+    <TrimmerRootAssembly Include="System.Reflection.Primitives" />
+    <TrimmerRootAssembly Include="System.Reflection.TypeExtensions" />
+    <TrimmerRootAssembly Include="System.Runtime" />
+    <TrimmerRootAssembly Include="System.Runtime.Extensions" />
+    <TrimmerRootAssembly Include="System.Runtime.Handles" />
+    <TrimmerRootAssembly Include="System.Runtime.InteropServices" />
+    <TrimmerRootAssembly Include="System.Runtime.Intrinsics" />
+    <TrimmerRootAssembly Include="System.Runtime.Loader" />
+    <TrimmerRootAssembly Include="System.Runtime.Serialization" />
+    <TrimmerRootAssembly Include="System.Runtime.Serialization.Json" />
+    <TrimmerRootAssembly Include="System.Runtime.Serialization.Xml" />
+    <TrimmerRootAssembly Include="System.Text.Encoding.CodePages" />
+    <TrimmerRootAssembly Include="System.Text.Encoding" />
+    <TrimmerRootAssembly Include="System.Text.Encoding.Extensions" />
+    <TrimmerRootAssembly Include="System.Threading" />
+    <TrimmerRootAssembly Include="System.Threading.Tasks" />
+    <TrimmerRootAssembly Include="System.Threading.Tasks.Extensions" />
+    <TrimmerRootAssembly Include="System.Threading.Thread" />
+    <TrimmerRootAssembly Include="System.Xml" />
+    <TrimmerRootAssembly Include="System.Xml.ReaderWriter" />
+  </ItemGroup>
+
 </Project>
