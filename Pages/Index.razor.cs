@@ -391,16 +391,10 @@ namespace SudokuBlazor.Pages
                         }
                         break;
                     case SudokuKeypad.MarkMode.Corner:
-                        foreach (int cellIndex in selection.SelectedCellIndices())
-                        {
-                            hasChange |= values.ToggleCornerMark(cellIndex, value);
-                        }
+                        hasChange |= values.ToggleCornerMarks(selection.SelectedCellIndices(), value);
                         break;
                     case SudokuKeypad.MarkMode.Center:
-                        foreach (int cellIndex in selection.SelectedCellIndices())
-                        {
-                            hasChange |= values.ToggleCenterMark(cellIndex, value);
-                        }
+                        hasChange |= values.ToggleCenterMarks(selection.SelectedCellIndices(), value);
                         break;
                     case SudokuKeypad.MarkMode.Color:
                         foreach (int cellIndex in selection.SelectedCellIndices())
