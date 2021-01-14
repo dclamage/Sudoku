@@ -34,6 +34,7 @@
     <TrimmerRootAssembly Include="System.Numerics" />
     <TrimmerRootAssembly Include="System.Numerics.Vectors" />
     <TrimmerRootAssembly Include="System.Reflection" />
+    <TrimmerRootAssembly Include="System.Reflection.DispatchProxy" />
     <TrimmerRootAssembly Include="System.Reflection.Emit.ILGeneration" />
     <TrimmerRootAssembly Include="System.Reflection.Emit.Lightweight" />
     <TrimmerRootAssembly Include="System.Reflection.Extensions" />
@@ -58,6 +59,7 @@
     <TrimmerRootAssembly Include="System.Threading.Thread" />
     <TrimmerRootAssembly Include="System.Xml" />
     <TrimmerRootAssembly Include="System.Xml.ReaderWriter" />
+    <TrimmerRootAssembly Include="mscorlib" />
   </ItemGroup>
 
 </Project>
