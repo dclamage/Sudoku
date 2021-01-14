@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using BlazorWorker.Core;
 using MudBlazor;
-using MudBlazor.Dialog;
 using MudBlazor.Services;
 
 namespace SudokuBlazor

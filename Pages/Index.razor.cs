@@ -60,6 +60,11 @@ namespace SudokuBlazor.Pages
             // Include any other calls here which end up not working after publishing.
             if (PublishSolverHack)
             {
+                SudokuSolveService sudokuSolveService = new SudokuSolveService();
+                sudokuSolveService.PrepSolve();
+                sudokuSolveService.Solve(null);
+                sudokuSolveService.Cancel();
+
                 SudokuSolver solver = new SudokuSolver();
                 solver.FindSolution();
             }
