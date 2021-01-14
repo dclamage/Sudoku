@@ -1,6 +1,11 @@
 ﻿@page "/"
 @page "/s/{givens}"
+
+@inherits ComponentDirtyRender
+
 @inject IJSRuntime JS;
+@inject ISnackbar Snackbar
+@inject IWorkerFactory workerFactory
 
 <div class="d-flex flex-column flex-sm-row justify-center">
     <div class="d-flex justify-center ma-5">

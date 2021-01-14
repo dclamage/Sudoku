@@ -29,6 +29,8 @@ namespace SudokuBlazor.Shared
         // Tables
         private readonly (double, double)[] cornerMarkOffsets = new (double, double)[9];
 
+        public int[] CellValues => (int[])cellValues.Clone();
+
         protected override void OnInitialized()
         {
             const double offsetBase = cellRectWidth / 12.0;

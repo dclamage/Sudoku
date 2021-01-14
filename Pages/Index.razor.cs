@@ -5,12 +5,17 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using BlazorWorker.Core;
+using BlazorWorker.BackgroundServiceFactory;
+using MudBlazor;
 using SudokuBlazor.Models;
 using SudokuBlazor.Shared;
+using SudokuBlazor.Solver;
+using BlazorWorker.WorkerBackgroundService;
 
 namespace SudokuBlazor.Pages
 {
-    partial class Index
+    partial class Index : ComponentDirtyRender
     {
         // Parameters
         [Parameter]
@@ -21,9 +26,6 @@ namespace SudokuBlazor.Pages
 
         // Constants
         private const double cellRectWidth = SudokuConstants.cellRectWidth;
-
-        // State
-        private bool hasRendered = false;
 
         // Input
         private bool mouseDown = false;
@@ -40,6 +42,13 @@ namespace SudokuBlazor.Pages
         // Services
         private readonly UndoHistory undoHistory = new UndoHistory();
 
+        // Web Workers
+        private Task initSolverWorkersTask;
+        private IWorker solverWorker;
+        private IWorkerBackgroundService<SudokuSolveService> solverService;
+        private bool solveInProgress = false;
+        private bool solveCancelled = false;
+
         protected override void OnInitialized()
         {
             Givens ??= "";
@@ -49,10 +58,17 @@ namespace SudokuBlazor.Pages
         {
             if (firstRender)
             {
+                initSolverWorkersTask = InitSolverService();
+
+                Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+                Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+
                 keypad.NumpadPressedAction = NumpadKeyPressed;
                 keypad.UndoPressedAction = Undo;
                 keypad.RedoPressedAction = Redo;
                 keypad.SaveScreenshotAsyncAction = SaveScreenshot;
+                keypad.SolvePuzzleAsyncAction = SolvePuzzle;
+                keypad.CancelSolveAsyncAction = CancelSolve;
 
                 if (Givens.Length == 81)
                 {
@@ -68,16 +84,6 @@ namespace SudokuBlazor.Pages
 
                 StoreSnapshot();
             }
-        }
-
-        protected override bool ShouldRender()
-        {
-            if (!hasRendered)
-            {
-                hasRendered = true;
-                return true;
-            }
-            return false;
         }
 
         protected async Task SelectCellAtLocation(double clientX, double clientY, bool controlDown, bool shiftDown, bool altDown)
@@ -345,6 +351,11 @@ namespace SudokuBlazor.Pages
 
         private void CellValueEntered(int value)
         {
+            if (solveInProgress)
+            {
+                return;
+            }
+
             bool hasChange = false;
             if (value == 0 && keypad.CurrentMarkMode != SudokuKeypad.MarkMode.Color)
             {
@@ -399,6 +410,11 @@ namespace SudokuBlazor.Pages
 
         private void Undo()
         {
+            if (solveInProgress)
+            {
+                return;
+            }
+
             var snapshotData = undoHistory.Undo();
             if (snapshotData != null)
             {
@@ -409,6 +425,11 @@ namespace SudokuBlazor.Pages
 
         private void Redo()
         {
+            if (solveInProgress)
+            {
+                return;
+            }
+
             var snapshotData = undoHistory.Redo();
             if (snapshotData != null)
             {
@@ -420,6 +441,72 @@ namespace SudokuBlazor.Pages
         private async Task SaveScreenshot()
         {
             await JS.InvokeVoidAsync("doSaveSvgAsPng", sudokusvg, "SudokuScreenshot.png");
+        }
+
+        private async Task InitSolverService()
+        {
+            solverWorker = await workerFactory.CreateAsync();
+            solverService = await solverWorker.CreateBackgroundServiceAsync<SudokuSolveService>();
+            await solverService.RegisterEventListenerAsync<int[]>(nameof(SudokuSolveService.SolveResultEvent), ReceiveSolveResult);
+        }
+
+        private void ReceiveSolveResult(object _, int[] solveResult)
+        {
+            if (solveCancelled)
+            {
+                Snackbar.Add($"Solve Cancelled.", Severity.Warning);
+            }
+            else if (solveResult == null)
+            {
+                Snackbar.Add($"Puzzle has no solutions!", Severity.Error);
+            }
+            else
+            {
+                StoreSnapshot();
+
+                for (int i = 0; i < 81; i++)
+                {
+                    values.SetCellValue(i, solveResult[i]);
+                }
+            }
+
+            solveCancelled = false;
+            solveInProgress = false;
+
+            keypad.SolvePuzzleCompleted();
+        }
+
+        private async Task SolvePuzzle()
+        {
+            solveInProgress = true;
+            solveCancelled = false;
+
+            int[] cellValues = values.CellValues;
+
+            await initSolverWorkersTask;
+            if (solveCancelled)
+            {
+                ReceiveSolveResult(null, null);
+                return;
+            }
+
+            await solverService.RunAsync(s => s.PrepSolve());
+            if (solveCancelled)
+            {
+                ReceiveSolveResult(null, null);
+                return;
+            }
+
+            await solverService.RunAsync(s => s.Solve(cellValues));
+        }
+
+        private async Task CancelSolve()
+        {
+            if (solveInProgress)
+            {
+                await solverService.RunAsync(s => s.Cancel());
+                solveCancelled = true;
+            }
         }
 
         private async Task<BoundingClientRect> GetBoundingClientRect(ElementReference element)

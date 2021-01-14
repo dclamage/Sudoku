@@ -69,6 +69,7 @@
                     DisableElevation="true"
                     Size="Size.Large"
                     Label="@value.ToString()"
+                    Disabled="@IsKeypadDisabled"
                     OnClick="@(() => NumpadButtonPressed(value))" />
             }
             </div>
@@ -84,6 +85,7 @@
                     Icon="@Icons.Material.Backspace"
                     Size="Size.Large"
                     IconSize="Size.Large"
+                    Disabled="@IsKeypadDisabled"
                     OnClick="@(() => NumpadButtonPressed(0))" />
             </MudTooltip>
         </div>
@@ -104,6 +106,7 @@
                             Style="@colors[colorFinalIndex].Style"
                             DisableElevation="true"
                             Size="Size.Large"
+                            Disabled="@IsKeypadDisabled"
                             OnClick="@(() => NumpadButtonPressed(colorFinalIndex + 1))" />
                         </MudTooltip>
                 }
@@ -120,6 +123,7 @@
                     Icon="@Icons.Material.Backspace"
                     Size="Size.Large"
                     IconSize="Size.Large"
+                    Disabled="@IsKeypadDisabled"
                     OnClick="@(() => NumpadButtonPressed(0))" />
             </MudTooltip>
         </div>
@@ -131,29 +135,31 @@
         <MudTooltip Text="Undo">
             <MudFabExt
                 @onmousedown:preventDefault=true
-                Class="ma-1 px-2 rounded numpad-button"
+                Class="ma-1 px-2 rounded mode-button"
                 Color="Color.Secondary"
                 DisableElevation="true"
                 Icon="@Icons.Material.Undo"
                 Size="Size.Large"
                 IconSize="Size.Large"
+                Disabled="@IsKeypadDisabled"
                 OnClick="@Undo" />
         </MudTooltip>
         <MudTooltip Text="Redo">
             <MudFabExt
                 @onmousedown:preventDefault=true
-                Class="ma-1 px-2 rounded numpad-button"
+                Class="ma-1 px-2 rounded mode-button"
                 Color="Color.Secondary"
                 DisableElevation="true"
                 Icon="@Icons.Material.Redo"
                 Size="Size.Large"
                 IconSize="Size.Large"
+                Disabled="@IsKeypadDisabled"
                 OnClick="@Redo" />
         </MudTooltip>
         <MudTooltip Text="Save Screenshot">
             <MudFabExt
                 @onmousedown:preventDefault=true
-                Class="ma-1 px-2 rounded numpad-button"
+                Class="ma-1 px-2 rounded mode-button"
                 Color="Color.Secondary"
                 DisableElevation="true"
                 Icon="@Icons.Material.Photo"
@@ -161,6 +167,37 @@
                 IconSize="Size.Large"
                 OnClick="@SaveScreenshot" />
         </MudTooltip>
+        @if (!isSolvingPuzzle)
+        {
+            <MudTooltip Text="Solve Puzzle">
+                <MudFabExt
+                    @onmousedown:preventDefault=true
+                    Class="ma-1 px-2 rounded mode-button"
+                    Color="Color.Secondary"
+                    DisableElevation="true"
+                    Icon="@Icons.Material.Computer"
+                    Size="Size.Large"
+                    IconSize="Size.Large"
+                    OnClick="@SolvePuzzle">
+                </MudFabExt>
+            </MudTooltip>
+        }
+        else
+        {
+            <MudTooltip Text="Cancel Solving Puzzle">
+                <MudFabExt
+                    @onmousedown:preventDefault=true
+                    Class="ma-1 px-2 rounded mode-button"
+                    Color="Color.Error"
+                    DisableElevation="true"
+                    Icon="@Icons.Material.Cancel"
+                    Size="Size.Large"
+                    IconSize="Size.Large"
+                    Disabled="@isCancellingPuzzle"
+                    OnClick="@CancelSolve">
+                </MudFabExt>
+            </MudTooltip>
+        }
     </div>
 
 </div>
