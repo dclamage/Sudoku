@@ -49,9 +49,20 @@ namespace SudokuBlazor.Pages
         private bool solveInProgress = false;
         private bool solveCancelled = false;
 
+        // Hack to get the solver to be included in the published package
+        public bool PublishSolverHack { get; set; } = false;
+
         protected override void OnInitialized()
         {
             Givens ??= "";
+
+            // Hack to get the solver to be included in the published package
+            // Include any other calls here which end up not working after publishing.
+            if (PublishSolverHack)
+            {
+                SudokuSolver solver = new SudokuSolver();
+                solver.FindSolution();
+            }
         }
 
         protected override void OnAfterRender(bool firstRender)
