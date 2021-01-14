@@ -13,15 +13,15 @@ svg.sudoku {
 }
 
 .numpad-button {
-    width: 6rem !important;
-    height: 4rem !important;
-    font-size: 2rem !important;
+    width: 6rem;
+    height: 4rem;
+    font-size: 2rem;
 }
 
 .mode-button {
-    width: 4rem !important;
-    height: 4rem !important;
-    font-size: 2rem !important;
+    width: 4rem;
+    height: 4rem;
+    font-size: 2rem;
 }
 
 @media(min-width:600px) {
