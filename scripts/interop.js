@@ -15,6 +15,9 @@ window.setSidebarSize = (element) => {
     document.documentElement.style.setProperty(`--sidebar-width`, $(element).outerWidth(true));
     document.documentElement.style.setProperty(`--sidebar-height`, $(element).outerHeight(true));
 }
+window.doSaveSvgAsPng = (element, name) => {
+    saveSvgAsPng(element, name);
+}
 
 //Prevents backspace except in the case of textareas and text inputs to prevent user navigation.
 $(document).keydown(function (e) {
