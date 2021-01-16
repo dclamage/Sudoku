@@ -8,9 +8,9 @@ namespace SudokuBlazor.Solver
 {
     public class SudokuSolveService
     {
-        const int H = SudokuSolver.HEIGHT;
-        const int W = SudokuSolver.WIDTH;
-        const int N = SudokuSolver.NUM_CELLS;
+        const int H = SolverUtility.HEIGHT;
+        const int W = SolverUtility.WIDTH;
+        const int N = SolverUtility.NUM_CELLS;
 
         private CancellationTokenSource cancellationToken;
 
@@ -27,7 +27,7 @@ namespace SudokuBlazor.Solver
 
         public void Solve(int[] board)
         {
-            if (board.Length != SudokuSolver.NUM_CELLS)
+            if (board.Length != SolverUtility.NUM_CELLS)
             {
                 SolveResultEvent?.Invoke(this, null);
                 return;

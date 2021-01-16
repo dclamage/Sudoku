@@ -1,0 +1,95 @@
+﻿using System.Collections.Generic;
+using System.Text;
+
+namespace SudokuBlazor.Solver.Constraints
+{
+    public abstract class Constraint
+    {
+        /// <summary>
+        /// The generic name of this constraint to present to the end-user.
+        /// </summary>
+        public abstract string Name { get; }
+
+        /// <summary>
+        /// Override if there is a more specific name for this constraint instance, such as "Killer Cage at r1c1".
+        /// </summary>
+        public virtual string SpecificName => Name;
+
+        /// <summary>
+        /// An svg path for the iconic representation of this constraint.
+        /// </summary>
+        public abstract string Icon { get; }
+
+        /// <summary>
+        /// Human-readable rules (in English) describing this constraint, which is presented to the end-user.
+        /// </summary>
+        public abstract string Rules { get; }
+
+        /// <summary>
+        /// Called once all constraints are finalized on the board.
+        /// This is the initial opportunity to remove candidates from the empty board before any values are set to it.
+        /// For example, a two cell killer cage with sum of 10 might remove the 9 candidate from its two cells.
+        /// Each constraint gets a round of inits until all of them return LogicResult.None.
+        /// </summary>
+        /// <returns>
+        /// LogicResult.None: Board is unchanged.
+        /// LogicResult.Changed: Board is changed.
+        /// LogicResult.Invalid: This constraint has made the solve impossible.
+        /// LogicResult.PuzzleComplete: Avoid returning this. It is used internally by the solver.
+        /// </returns>
+        public virtual LogicResult InitCandidates(SudokuSolver sudokuSolver) { return LogicResult.None; }
+
+        /// <summary>
+        /// Called when a value has just been set on the board.
+        /// The job of this function is twofold:
+        ///   1) Remove candidates from any other cells that are no longer possible because this value was set.
+        ///   2) Determine if setting this value is a simple rules violation.
+        ///   
+        /// Avoid complex logic in this function. Just enforcement of the direct, actual rule is advised.
+        /// 
+        /// There is no need to specifically enforce distinct digits in groups as long as the Groups property is provided.
+        /// By the time this function is called, group distinctness will already have been enforced.
+        /// 
+        /// For example, a nonconsecutive constraint would remove the consecutive candidates from the
+        /// cells adjacent to [i,j] and return false if any of those cells end up with no candidates left.
+        /// </summary>
+        /// <param name="sudokuSolver">The main Sudoku solver.</param>
+        /// <param name="i">The row index (0-8)</param>
+        /// <param name="j">The col index (0-8)</param>
+        /// <param name="val">The value which has been set in the cell (1-9)</param>
+        /// <returns>True if the board is still valid; false otherwise.</returns>
+        public abstract bool EnforceConstraint(SudokuSolver sudokuSolver, int i, int j, int val);
+
+        /// <summary>
+        /// Called during logical solving.
+        /// Go through the board and perform a single step of logic related to this constraint.
+        /// For example, a nonconsecutive constraint might look for a cell with only two consecutive
+        /// candidates left and eliminate those candidates from all adjacent cells.
+        /// 
+        /// Use your judgement and testing to determine if any of the logic should occur during brute force
+        /// solving. The brute force solving boolean is set to true when this logic is not going to be
+        /// visible to the end-user and so anything done during brute forcing is only advised if it's faster
+        /// than guessing.
+        /// 
+        /// Do not attempt to do any logic which isn't relevant to this constraint.
+        /// </summary>
+        /// <param name="sudokuSolver">The Sudoku board.</param>
+        /// <param name="logicalStepDescription">If a logical step is found, store a human-readable description of what was performed here.</param>
+        /// <param name="isBruteForcing">Whether the solver is currently brute forcing a solution.</param>
+        /// <returns>
+        /// LogicResult.None: No logic found.
+        /// LogicResult.Changed: Logic found which changed the board.
+        /// LogicResult.Invalid: Your logic has determined that there are no solutions (such as when removing the last candidate from a cell).
+        /// LogicResult.PuzzleComplete: Avoid returning this. It is used internally by the solver.
+        /// </returns>
+        public abstract LogicResult StepLogic(SudokuSolver sudokuSolver, StringBuilder logicalStepDescription, bool isBruteForcing);
+
+        /// <summary>
+        /// Provide a lists of cells in which all digits must be distinct.
+        /// For example, a killer cage would provide all its cells.
+        /// A little killer clue would provide nothing, as it does not enforce distinctness.
+        /// The list contents are expected to remain the same over the lifetime of the object.
+        /// </summary>
+        public virtual List<(int, int)> Group => null;
+    }
+}
