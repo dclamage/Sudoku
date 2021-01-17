@@ -15,6 +15,10 @@ namespace SudokuBlazor.Solver
         private CancellationTokenSource cancellationToken;
 
         public event EventHandler<int[]> SolveResultEvent;
+        public event EventHandler<ulong> SolutionCountProgressEvent;
+        public event EventHandler<ulong> SolutionCountCompleteEvent;
+        public event EventHandler<(int, uint[])> CandidatesProgressEvent;
+        public event EventHandler<uint[]> CandidatesSolutionEvent;
 
         public void PrepSolve()
         {
@@ -25,7 +29,7 @@ namespace SudokuBlazor.Solver
             }
         }
 
-        public void Solve(int[] board)
+        public void Solve(int[] board, bool random)
         {
             if (board.Length != SolverUtility.NUM_CELLS)
             {
@@ -33,33 +37,32 @@ namespace SudokuBlazor.Solver
                 return;
             }
 
-            SudokuSolver solver = new SudokuSolver();
-
-            for (int i = 0; i < H; i++)
+            SudokuSolver solver = CreateSolver(board);
+            if (solver == null)
             {
-                for (int j = 0; j < W; j++)
+                SolveResultEvent?.Invoke(this, null);
+                return;
+            }
+
+            Task.Run(async () =>
+            {
+                try
                 {
-                    int cellIndex = i * W + j;
-                    int curValue = board[cellIndex];
-                    if (curValue >= 1 && curValue <= 9)
+                    if (!random)
                     {
-                        if (!solver.SetValue(i, j, curValue))
+                        if (!await solver.FindSolution(cancellationToken.Token))
                         {
                             SolveResultEvent?.Invoke(this, null);
                             return;
                         }
                     }
-                }
-            }
-
-            Task.Run(() =>
-            {
-                try
-                {
-                    if (!solver.FindSolution(cancellationToken.Token))
+                    else
                     {
-                        SolveResultEvent?.Invoke(this, null);
-                        return;
+                        if (!await solver.FindRandomSolution(cancellationToken.Token))
+                        {
+                            SolveResultEvent?.Invoke(this, null);
+                            return;
+                        }
                     }
                 }
                 catch (OperationCanceledException)
@@ -80,7 +83,81 @@ namespace SudokuBlazor.Solver
                     }
                 }
                 SolveResultEvent?.Invoke(this, result);
-            });
+            }, cancellationToken.Token);
+        }
+
+        public void CountSolutions(int[] board, ulong maxSolutions)
+        {
+            if (board.Length != SolverUtility.NUM_CELLS)
+            {
+                SolutionCountCompleteEvent?.Invoke(this, 0);
+                return;
+            }
+
+            SudokuSolver solver = CreateSolver(board);
+            if (solver == null)
+            {
+                SolutionCountCompleteEvent?.Invoke(this, 0);
+                return;
+            }
+
+            Task.Run(async () =>
+            {
+                ulong count = await solver.CountSolutions(maxSolutions, SolutionCountProgressEvent, cancellationToken.Token);
+                SolutionCountCompleteEvent?.Invoke(null, count);
+            }, cancellationToken.Token);
+        }
+
+        public void FindRealCandidates(int[] board)
+        {
+            if (board.Length != SolverUtility.NUM_CELLS)
+            {
+                CandidatesSolutionEvent?.Invoke(this, null);
+                return;
+            }
+
+            SudokuSolver solver = CreateSolver(board);
+            if (solver == null)
+            {
+                CandidatesSolutionEvent?.Invoke(this, null);
+                return;
+            }
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await solver.FillRealCandidates(CandidatesProgressEvent, CandidatesSolutionEvent, cancellationToken.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    cancellationToken.Dispose();
+                    cancellationToken = null;
+                    CandidatesSolutionEvent?.Invoke(this, null);
+                    return;
+                }
+            }, cancellationToken.Token);
+        }
+
+        private static SudokuSolver CreateSolver(int[] board)
+        {
+            SudokuSolver solver = new SudokuSolver();
+            for (int i = 0; i < H; i++)
+            {
+                for (int j = 0; j < W; j++)
+                {
+                    int cellIndex = i * W + j;
+                    int curValue = board[cellIndex];
+                    if (curValue >= 1 && curValue <= 9)
+                    {
+                        if (!solver.SetValue(i, j, curValue))
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
+            return solver;
         }
 
         public void Cancel()

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using SudokuBlazor.Solver.Constraints;
 using static SudokuBlazor.Solver.SolverUtility;
 
@@ -405,8 +407,9 @@ namespace SudokuBlazor.Solver
         /// </summary>
         /// <param name="cancellationToken">Pass in to support cancelling the solve.</param>
         /// <returns>True if a solution is found, otherwise false.</returns>
-        public bool FindSolution(CancellationToken? cancellationToken = null)
+        public async Task<bool> FindSolution(CancellationToken? cancellationToken = null)
         {
+            Stopwatch timeSinceCheck = Stopwatch.StartNew();
             ulong numGuesses = 0;
             ulong numContradictions = 0;
 
@@ -416,7 +419,12 @@ namespace SudokuBlazor.Solver
             var boardStack = new Stack<SudokuSolver>();
             while (true)
             {
-                cancellationToken?.ThrowIfCancellationRequested();
+                if (timeSinceCheck.ElapsedMilliseconds > 100)
+                {
+                    cancellationToken?.ThrowIfCancellationRequested();
+                    await Task.Delay(1);
+                    timeSinceCheck.Restart();
+                }
 
                 if (ConsolidateBoard())
                 {
@@ -476,8 +484,10 @@ namespace SudokuBlazor.Solver
         /// </summary>
         /// <param name="cancellationToken">Pass in to support cancelling the solve.</param>
         /// <returns>True if a solution is found, otherwise false.</returns>
-        public bool FindRandomSolution(CancellationToken? cancellationToken = null)
+        public async Task<bool> FindRandomSolution(CancellationToken? cancellationToken = null)
         {
+            Stopwatch timeSinceCheck = Stopwatch.StartNew();
+
             Random rand = new Random();
 
             bool wasBruteForcing = isBruteForcing;
@@ -486,7 +496,12 @@ namespace SudokuBlazor.Solver
             var boardStack = new Stack<SudokuSolver>();
             while (true)
             {
-                cancellationToken?.ThrowIfCancellationRequested();
+                if (timeSinceCheck.ElapsedMilliseconds > 100)
+                {
+                    cancellationToken?.ThrowIfCancellationRequested();
+                    await Task.Delay(1);
+                    timeSinceCheck.Restart();
+                }
 
                 if (ConsolidateBoard())
                 {
@@ -553,7 +568,7 @@ namespace SudokuBlazor.Solver
         /// <param name="progressEvent">An event to receive the progress count as solutions are found.</param>
         /// <param name="cancellationToken">Pass in to support cancelling the count.</param>
         /// <returns>The solution count found.</returns>
-        public ulong CountSolutions(ulong maxSolutions = 0, EventHandler<ulong> progressEvent = null,  CancellationToken? cancellationToken = null)
+        public async Task<ulong> CountSolutions(ulong maxSolutions = 0, EventHandler<ulong> progressEvent = null,  CancellationToken? cancellationToken = null)
         {
             bool wasBruteForcing = isBruteForcing;
             isBruteForcing = true;
@@ -561,7 +576,7 @@ namespace SudokuBlazor.Solver
             CountSolutionsState state = new CountSolutionsState(maxSolutions, progressEvent, cancellationToken);
             try
             {
-                CountSolutions(0, state);
+                await CountSolutions(0, state);
             }
             catch (OperationCanceledException) { }
 
@@ -574,6 +589,7 @@ namespace SudokuBlazor.Solver
             public ulong numSolutions = 0;
             public ulong nextNumSolutionsEvent = 1;
             public ulong numSolutionsEventIncrement = 1;
+            public readonly Stopwatch timeSinceCheck = Stopwatch.StartNew();
 
             public readonly ulong maxSolutions;
             public readonly EventHandler<ulong> progressEvent;
@@ -591,20 +607,18 @@ namespace SudokuBlazor.Solver
                 numSolutions++;
                 if (nextNumSolutionsEvent == numSolutions)
                 {
-                    progressEvent?.Invoke(this, numSolutions);
-                    nextNumSolutionsEvent += numSolutionsEventIncrement;
+                    progressEvent?.Invoke(null, numSolutions);
                     if (numSolutionsEventIncrement < 1000 && numSolutions / numSolutionsEventIncrement >= 10)
                     {
                         numSolutionsEventIncrement *= 10;
                     }
+                    nextNumSolutionsEvent += numSolutionsEventIncrement;
                 }
             }
         }
 
-        private void CountSolutions(int cell, CountSolutionsState state)
+        private async Task CountSolutions(int cell, CountSolutionsState state)
         {
-            state.cancellationToken?.ThrowIfCancellationRequested();
-
             int i = cell / WIDTH;
             int j = cell % WIDTH;
 
@@ -639,6 +653,14 @@ namespace SudokuBlazor.Solver
                     continue;
                 }
 
+                // Check for cancel
+                if (state.timeSinceCheck.ElapsedMilliseconds > 100)
+                {
+                    state.cancellationToken?.ThrowIfCancellationRequested();
+                    await Task.Delay(1);
+                    state.timeSinceCheck.Restart();
+                }
+
                 // Create a duplicate board with one guess and count the solutions for that one
                 SudokuSolver boardCopy = Clone();
                 boardCopy.isBruteForcing = true;
@@ -647,7 +669,7 @@ namespace SudokuBlazor.Solver
                 if (boardCopy.SetValue(i, j, val) && boardCopy.ConsolidateBoard())
                 {
                     // Accumulate how many solutions there are with this cell value
-                    boardCopy.CountSolutions(cell + 1, state);
+                    await boardCopy.CountSolutions(cell + 1, state);
                     if (state.maxSolutions > 0 && state.numSolutions >= state.maxSolutions)
                     {
                         return;
@@ -677,30 +699,38 @@ namespace SudokuBlazor.Solver
         /// <param name="progressEvent">Recieve progress notifications. Will send 0 through 80 (assume 81 is 100%, though that will never be sent).</param>
         /// <param name="cancellationToken">Pass in to support cancelling.</param>
         /// <returns>True if there are solutions and candidates are filled. False if there are no solutions.</returns>
-        public bool FillRealCandidates(EventHandler<int> progressEvent = null, CancellationToken? cancellationToken = null)
+        public async Task FillRealCandidates(EventHandler<(int, uint[])> progressEvent = null, EventHandler<uint[]> completionEvent = null, CancellationToken? cancellationToken = null)
         {
+            Stopwatch timeSinceCheck = Stopwatch.StartNew();
             bool wasBruteForcing = isBruteForcing;
             isBruteForcing = true;
 
             if (!ConsolidateBoard())
             {
+                completionEvent?.Invoke(null, null);
                 isBruteForcing = wasBruteForcing;
-                return false;
+                return;
             }
 
-            uint[,] fixedBoard = new uint[HEIGHT, WIDTH];
+            uint[] fixedBoard = new uint[NUM_CELLS];
             for (int i = 0; i < HEIGHT; i++)
             {
                 for (int j = 0; j < WIDTH; j++)
                 {
                     int cellIndex = i * 9 + j;
-                    progressEvent?.Invoke(this, cellIndex);
 
-                    cancellationToken?.ThrowIfCancellationRequested();
+                    if (timeSinceCheck.ElapsedMilliseconds > 100)
+                    {
+                        cancellationToken?.ThrowIfCancellationRequested();
+
+                        progressEvent?.Invoke(null, (cellIndex, fixedBoard));
+                        await Task.Delay(1);
+                        timeSinceCheck.Restart();
+                    }
 
                     if (IsValueSet(i, j))
                     {
-                        fixedBoard[i, j] = board[i, j];
+                        fixedBoard[i * WIDTH + j] = board[i, j];
                         continue;
                     }
 
@@ -715,7 +745,7 @@ namespace SudokuBlazor.Solver
                         }
 
                         // Don't bother trying this value if it's already confirmed in the fixed board
-                        if ((fixedBoard[i, j] & valMask) != 0)
+                        if ((fixedBoard[i * WIDTH + j] & valMask) != 0)
                         {
                             continue;
                         }
@@ -725,14 +755,14 @@ namespace SudokuBlazor.Solver
                         boardCopy.isBruteForcing = true;
 
                         // Set the board to use this candidate's value
-                        if (boardCopy.SetValue(i, j, val) && boardCopy.FindSolution(cancellationToken))
+                        if (boardCopy.SetValue(i, j, val) && await boardCopy.FindSolution(cancellationToken))
                         {
                             for (int si = 0; si < HEIGHT; si++)
                             {
                                 for (int sj = 0; sj < WIDTH; sj++)
                                 {
                                     uint solutionValMask = boardCopy.board[si, sj] & ~valueSetMask;
-                                    fixedBoard[si, sj] |= solutionValMask;
+                                    fixedBoard[si * WIDTH + sj] |= solutionValMask;
                                 }
                             }
                         }
@@ -740,11 +770,8 @@ namespace SudokuBlazor.Solver
                 }
             }
 
-            board = fixedBoard;
-
-            bool boardValid = ConsolidateBoard();
+            completionEvent?.Invoke(null, fixedBoard);
             isBruteForcing = wasBruteForcing;
-            return boardValid;
         }
 
         /// <summary>

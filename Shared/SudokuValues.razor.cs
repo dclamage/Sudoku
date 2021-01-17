@@ -156,6 +156,40 @@ namespace SudokuBlazor.Shared
             return true;
         }
 
+        public void SetAllCellValues(int[] newCellValues)
+        {
+            bool changed = false;
+            for (int cellIndex = 0; cellIndex < cellValues.Length; cellIndex++)
+            {
+                int newValue = newCellValues[cellIndex];
+                if (cellIsGiven[cellIndex] || cellValues[cellIndex] == newValue)
+                {
+                    continue;
+                }
+
+                if (newValue == 0)
+                {
+                    cellText.Remove((cellIndex, 0, 0));
+                    cellValues[cellIndex] = 0;
+                    ReRenderCenterMarks(cellIndex);
+                    ReRenderCornerMarks(cellIndex);
+                }
+                else
+                {
+                    ClearPencilmarkVisuals(cellIndex);
+                    cellValues[cellIndex] = newValue;
+                    cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, newValue, filledColor);
+                }
+                changed = true;
+            }
+
+            if (changed)
+            {
+                SetDirty();
+                CheckConflicts();
+            }
+        }
+
         private static Text CreateFilledText(int cellIndex, int value, string color) => new Text(
             x: (cellIndex % 9 + 0.5) * cellRectWidth,
             y: (cellIndex / 9 + 0.5) * cellRectWidth + (cellRectWidth - valueFontSize) / 4.0,
@@ -248,6 +282,48 @@ namespace SudokuBlazor.Shared
                 SetDirty();
             }
             return dirty;
+        }
+
+        public void SetAllCenterPencilMarks(uint[] candidates)
+        {
+            bool changed = false;
+            for (int cellIndex = 0; cellIndex < cellValues.Length; cellIndex++)
+            {
+                uint curCandidates = cellCenterMarks[cellIndex];
+                uint newCandidates = candidates[cellIndex] & ~(1u << 31);
+                if (cellIsGiven[cellIndex] || cellValues[cellIndex] != 0)
+                {
+                    continue;
+                }
+
+                bool curChanged = false;
+                for (int value = 1; value <= 9; value++)
+                {
+                    uint valueMask = 1u << (value - 1);
+                    bool curHaveValue = (curCandidates & valueMask) != 0;
+                    bool newHaveValue = (newCandidates & valueMask) != 0;
+                    if (curHaveValue != newHaveValue)
+                    {
+                        if (curHaveValue)
+                        {
+                            cellText.Remove((cellIndex, ValueType.Center, value));
+                        }
+                        curChanged = true;
+                    }
+                }
+
+                if (curChanged)
+                {
+                    cellCenterMarks[cellIndex] = newCandidates;
+                    ReRenderCenterMarks(cellIndex);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                SetDirty();
+            }
         }
 
         public bool ToggleCornerMarks(IEnumerable<int> cellIndexes, int value)

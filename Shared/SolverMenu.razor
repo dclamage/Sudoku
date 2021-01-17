@@ -1,39 +1,35 @@
 ﻿@inject IWorkerFactory workerFactory
 @inject ISnackbar Snackbar
 
-@if (IsWorking)
+<MudContainer Style="max-height: 300px; overflow-y: scroll; width: 100%;">
+        <MudText Style="white-space: pre-wrap;">@ConsoleText</MudText>
+</MudContainer>
+
+@if (SolveInProgress)
 {
-    @if (ShowSpinner)
-    {
-        <div class="d-flex align-center pa-2 mx-2">
-            <MudProgressCircular Indeterminate="true"></MudProgressCircular>
-        </div>
-    }
-    else
-    {
-        <MudContainer Style="max-height: 300px; overflow-y: scroll">
-                <MudText Style="white-space: pre-wrap;">@ConsoleText</MudText>
-        </MudContainer>
-    }
-    <div class="d-flex align-center pa-2 mx-2">
-        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="CancelSolve">Cancel</MudButton>
+    <div class="d-flex align-center pa-2 mx-2" style="width: 100%;">
+        <MudProgressCircular Indeterminate="true"></MudProgressCircular>
+    </div>
+
+    <div class="d-flex align-center pa-2 mx-2" style="width: 100%;">
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="CancelSolve" Disabled="solveCancelled">Cancel</MudButton>
     </div>
 }
 else
 {
     <div class="d-flex align-center pa-2 mx-2">
-        <MudButton Color="Color.Primary" OnClick="LogicalSolve" Disabled="@IsWorking">Solve Logically</MudButton>
+        <MudButton Color="Color.Primary" OnClick="LogicalSolve" Disabled="@SolveInProgress">Solve Logically</MudButton>
     </div>
     <div class="d-flex align-center pa-2 mx-2">
-        <MudButton Color="Color.Primary" OnClick="SolvePuzzle" Disabled="@IsWorking">Find Solution</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SolvePuzzle" Disabled="@SolveInProgress">Find Solution</MudButton>
     </div>
     <div class="d-flex align-center pa-2 mx-2">
-        <MudButton Color="Color.Primary" OnClick="RandomSolvePuzzle" Disabled="@IsWorking">Find Random Solution</MudButton>
+        <MudButton Color="Color.Primary" OnClick="RandomSolvePuzzle" Disabled="@SolveInProgress">Find Random Solution</MudButton>
     </div>
     <div class="d-flex align-center pa-2 mx-2">
-        <MudButton Color="Color.Primary" OnClick="CountSolutions" Disabled="@IsWorking">Count Solutions</MudButton>
+        <MudButton Color="Color.Primary" OnClick="CountSolutions" Disabled="@SolveInProgress">Count Solutions</MudButton>
     </div>
     <div class="d-flex align-center pa-2 mx-2">
-        <MudButton Color="Color.Primary" OnClick="FillTrueCandidates" Disabled="@IsWorking">Fill True Candidates</MudButton>
+        <MudButton Color="Color.Primary" OnClick="FillTrueCandidates" Disabled="@SolveInProgress">Fill True Candidates</MudButton>
     </div>
 }
