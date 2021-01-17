@@ -1,48 +1,31 @@
 ﻿@page "/"
 @page "/s/{givens}"
 
-@inherits ComponentDirtyRender
-
 @inject IJSRuntime JS;
-@inject ISnackbar Snackbar
-@inject IWorkerFactory workerFactory
 
-<div class="d-flex flex-column flex-sm-row justify-center">
-    <div class="d-flex justify-center ma-5">
-        <svg @ref="sudokusvg" class="sudoku" viewBox="0 0 @SudokuConstants.viewboxSize @SudokuConstants.viewboxSize"
-            @onmousedown="@MouseDown"
-            @onmousemove="@MouseMove"
-            @onmouseup="@MouseUp"
-            @ontouchstart="@TouchStart"
-            @ontouchmove="@TouchMove"
-            @ontouchend="@TouchEnd"
-            @ontouchcancel="@TouchEnd"
-            @onkeydown="@KeyDown"
-            @onblur="@FocusLost"
-            @onmousedown:preventDefault=true @onmousedown:stopPropagation=true
-            @onmousemove:preventDefault=true @onmousemove:stopPropagation=true
-            @onmouseup:preventDefault=true @onmouseup:stopPropagation=true
-            @onclick:preventDefault=true @onclick:stopPropagation=true
-            @oncontextmenu="@((MouseEventArgs e) => {})" @oncontextmenu:preventDefault=true @oncontextmenu:stopPropagation=true
-            tabindex="0"
-            autofocus
-            opacity="1.0"
-            xmlns="http://www.w3.org/2000/svg">
-
-            <rect id="rect-sudoku-background" x="0" y="0" width="@SudokuConstants.viewboxSize" height="@SudokuConstants.viewboxSize" fill="#fff" stroke="none" />
-
-            <SudokuColoring @ref="coloring" />
-
-            <SudokuSelection @ref="selection" />
-
-            <SudokuGrid />
-
-            <SudokuValues @ref="values" />
-
-        </svg>
+<MudLayout>
+    <div @ref="appbarDiv">
+        <MudAppBar Elevation="1" Dense="true">
+            <MudTooltip Text="@(DrawerOpen ? "Close Drawer" : "Open Drawer")">
+                <MudIconButton Icon="@Icons.Material.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+            </MudTooltip>
+            <MudAppBarSpacer />
+            <MudText Typo="Typo.h5" Class="mudblazor-appbar-brand-text">Sudoku</MudText>
+            <MudAppBarSpacer />
+            <MudTooltip Text="GitHub repository">
+                <MudIconButton Icon="@Icons.Custom.GitHub" Color="Color.Inherit" Link="https://github.com/dclamage/Sudoku" Target="_blank" />
+            </MudTooltip>
+        </MudAppBar>
     </div>
-
-    <div class="d-flex flex-column justify-center">
-        <SudokuKeypad @ref="keypad"/>
-    </div>
-</div>
+    <MudDrawer @bind-Open="@DrawerOpen" Clipped="true" Elevation="1">
+        <div @ref="drawerDiv">
+            <MudDrawerHeader>
+                <MudText Typo="Typo.h6">Solver</MudText>
+            </MudDrawerHeader>
+            <SolverMenu @ref="solverMenu" IndexPage="this" />
+        </div>
+    </MudDrawer>
+    <MudMainContent Class="pt-16 px-16">
+        <SudokuBoard @ref="sudokuBoard" Givens="@Givens" />
+    </MudMainContent>
+</MudLayout>

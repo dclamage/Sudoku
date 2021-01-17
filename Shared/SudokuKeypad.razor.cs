@@ -11,6 +11,16 @@ namespace SudokuBlazor.Shared
 {
     partial class SudokuKeypad : ComponentDirtyRender
     {
+        // Parameters
+        [Parameter]
+        public Action<int> NumpadPressedAction { get; set; }
+        [Parameter]
+        public Action UndoPressedAction { get; set; }
+        [Parameter]
+        public Action RedoPressedAction { get; set; }
+        [Parameter]
+        public Func<Task> SaveScreenshotAsyncAction { get; set; }
+
         // Public interface
         public enum MarkMode
         {
@@ -20,12 +30,6 @@ namespace SudokuBlazor.Shared
             Color,
             Max
         }
-        public Action<int> NumpadPressedAction { get; set; }
-        public Action UndoPressedAction { get; set; }
-        public Action RedoPressedAction { get; set; }
-        public Func<Task> SaveScreenshotAsyncAction { get; set; }
-        public Func<Task> SolvePuzzleAsyncAction { get; set; }
-        public Func<Task> CancelSolveAsyncAction { get; set; }
         public MarkMode CurrentMarkMode
         {
             get => currentMarkMode;
@@ -34,6 +38,20 @@ namespace SudokuBlazor.Shared
                 ColorModePressed(value);
             }
         }
+        public bool SolveInProgress
+        {
+            get => _solveInProgress;
+            set
+            {
+                if (_solveInProgress != value)
+                {
+                    _solveInProgress = value;
+                    SetDirty();
+                }
+            }
+        }
+        private bool _solveInProgress = false;
+
         public string GetColorHexValue(int colorIndex)
         {
             if (colorIndex <= 0 || colorIndex - 1 >= colors.Count)
@@ -46,9 +64,7 @@ namespace SudokuBlazor.Shared
         // State
         private readonly Color[] modeButtonColors = new Color[] { Color.Success, Color.Primary, Color.Primary, Color.Primary };
         private MarkMode currentMarkMode = MarkMode.Fill;
-        private bool isSolvingPuzzle = false;
-        private bool isCancellingPuzzle = false;
-        public bool IsKeypadDisabled => isSolvingPuzzle;
+        public bool IsKeypadDisabled => SolveInProgress;
         private readonly List<ColorInfo> colors = new List<ColorInfo>
         {
             new ColorInfo("Silver", "#cbcbcb"),
@@ -77,7 +93,7 @@ namespace SudokuBlazor.Shared
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            await JS.InvokeVoidAsync("setSidebarSize", outerDiv);
+            await JS.InvokeVoidAsync("setKeypadSize", outerDiv);
         }
 
         protected void NumpadButtonPressed(int value)
@@ -113,27 +129,6 @@ namespace SudokuBlazor.Shared
         protected async void SaveScreenshot()
         {
             await SaveScreenshotAsyncAction?.Invoke();
-        }
-
-        protected async void SolvePuzzle()
-        {
-            isSolvingPuzzle = true;
-            SetDirty();
-            await SolvePuzzleAsyncAction?.Invoke();
-        }
-
-        protected async void CancelSolve()
-        {
-            isCancellingPuzzle = true;
-            SetDirty();
-            await CancelSolveAsyncAction?.Invoke();
-        }
-
-        public void SolvePuzzleCompleted()
-        {
-            isSolvingPuzzle = false;
-            isCancellingPuzzle = false;
-            SetDirty();
         }
 
         // Icons (See the RawAssets folder for the original svgs)

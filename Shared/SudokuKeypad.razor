@@ -167,37 +167,6 @@
                 IconSize="Size.Large"
                 OnClick="@SaveScreenshot" />
         </MudTooltip>
-        @if (!isSolvingPuzzle)
-        {
-            <MudTooltip Text="Solve Puzzle">
-                <MudFabExt
-                    @onmousedown:preventDefault=true
-                    Class="ma-1 px-2 rounded mode-button"
-                    Color="Color.Secondary"
-                    DisableElevation="true"
-                    Icon="@Icons.Material.Computer"
-                    Size="Size.Large"
-                    IconSize="Size.Large"
-                    OnClick="@SolvePuzzle">
-                </MudFabExt>
-            </MudTooltip>
-        }
-        else
-        {
-            <MudTooltip Text="Cancel Solving Puzzle">
-                <MudFabExt
-                    @onmousedown:preventDefault=true
-                    Class="ma-1 px-2 rounded mode-button"
-                    Color="Color.Error"
-                    DisableElevation="true"
-                    Icon="@Icons.Material.Cancel"
-                    Size="Size.Large"
-                    IconSize="Size.Large"
-                    Disabled="@isCancellingPuzzle"
-                    OnClick="@CancelSolve">
-                </MudFabExt>
-            </MudTooltip>
-        }
     </div>
 
 </div>

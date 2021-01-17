@@ -1,0 +1,39 @@
+﻿@inject IWorkerFactory workerFactory
+@inject ISnackbar Snackbar
+
+@if (IsWorking)
+{
+    @if (ShowSpinner)
+    {
+        <div class="d-flex align-center pa-2 mx-2">
+            <MudProgressCircular Indeterminate="true"></MudProgressCircular>
+        </div>
+    }
+    else
+    {
+        <MudContainer Style="max-height: 300px; overflow-y: scroll">
+                <MudText Style="white-space: pre-wrap;">@ConsoleText</MudText>
+        </MudContainer>
+    }
+    <div class="d-flex align-center pa-2 mx-2">
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="CancelSolve">Cancel</MudButton>
+    </div>
+}
+else
+{
+    <div class="d-flex align-center pa-2 mx-2">
+        <MudButton Color="Color.Primary" OnClick="LogicalSolve" Disabled="@IsWorking">Solve Logically</MudButton>
+    </div>
+    <div class="d-flex align-center pa-2 mx-2">
+        <MudButton Color="Color.Primary" OnClick="SolvePuzzle" Disabled="@IsWorking">Find Solution</MudButton>
+    </div>
+    <div class="d-flex align-center pa-2 mx-2">
+        <MudButton Color="Color.Primary" OnClick="RandomSolvePuzzle" Disabled="@IsWorking">Find Random Solution</MudButton>
+    </div>
+    <div class="d-flex align-center pa-2 mx-2">
+        <MudButton Color="Color.Primary" OnClick="CountSolutions" Disabled="@IsWorking">Count Solutions</MudButton>
+    </div>
+    <div class="d-flex align-center pa-2 mx-2">
+        <MudButton Color="Color.Primary" OnClick="FillTrueCandidates" Disabled="@IsWorking">Fill True Candidates</MudButton>
+    </div>
+}
