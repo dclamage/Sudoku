@@ -19,6 +19,9 @@ namespace SudokuBlazor.Solver
         public event EventHandler<ulong> SolutionCountCompleteEvent;
         public event EventHandler<(int, uint[])> CandidatesProgressEvent;
         public event EventHandler<uint[]> CandidatesSolutionEvent;
+        public event EventHandler<(string, uint[])> LogicalSolveProgress;
+        public event EventHandler<(string, uint[])> LogicalSolveCompleted;
+        public event EventHandler<(string, uint[])> LogicalStepCompleted;
 
         public void PrepSolve()
         {
@@ -29,7 +32,56 @@ namespace SudokuBlazor.Solver
             }
         }
 
-        public void Solve(int[] board, bool random)
+        public void LogicalStep(uint[] board)
+        {
+            if (board.Length != SolverUtility.NUM_CELLS)
+            {
+                LogicalStepCompleted?.Invoke(this, ("Invalid board.", null));
+                return;
+            }
+
+            SudokuSolver solver = CreateSolver(board);
+            if (solver == null)
+            {
+                LogicalStepCompleted?.Invoke(this, ("Invalid board.", null));
+                return;
+            }
+
+            solver.LogicalStep(LogicalStepCompleted);
+        }
+
+        public void LogicalSolve(uint[] board)
+        {
+            if (board.Length != SolverUtility.NUM_CELLS)
+            {
+                LogicalSolveCompleted?.Invoke(this, ("Invalid board.", null));
+                return;
+            }
+
+            SudokuSolver solver = CreateSolver(board);
+            if (solver == null)
+            {
+                LogicalSolveCompleted?.Invoke(this, ("Invalid board.", null));
+                return;
+            }
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await solver.LogicalSolve(LogicalSolveProgress, LogicalSolveCompleted, cancellationToken.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    cancellationToken.Dispose();
+                    cancellationToken = null;
+                    LogicalSolveCompleted?.Invoke(this, ("Cancelled.", solver.FlatBoard));
+                    return;
+                }
+            }, cancellationToken.Token);
+        }
+
+        public void Solve(uint[] board, bool random)
         {
             if (board.Length != SolverUtility.NUM_CELLS)
             {
@@ -86,7 +138,7 @@ namespace SudokuBlazor.Solver
             }, cancellationToken.Token);
         }
 
-        public void CountSolutions(int[] board, ulong maxSolutions)
+        public void CountSolutions(uint[] board, ulong maxSolutions)
         {
             if (board.Length != SolverUtility.NUM_CELLS)
             {
@@ -139,7 +191,7 @@ namespace SudokuBlazor.Solver
             }, cancellationToken.Token);
         }
 
-        private static SudokuSolver CreateSolver(int[] board)
+        public static SudokuSolver CreateSolver(int[] board)
         {
             SudokuSolver solver = new SudokuSolver();
             for (int i = 0; i < H; i++)
@@ -151,6 +203,41 @@ namespace SudokuBlazor.Solver
                     if (curValue >= 1 && curValue <= 9)
                     {
                         if (!solver.SetValue(i, j, curValue))
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
+            return solver;
+        }
+
+        public static SudokuSolver CreateSolver(uint[] board)
+        {
+            SudokuSolver solver = new SudokuSolver();
+
+            // Start by setting the filled values
+            for (int i = 0; i < H; i++)
+            {
+                for (int j = 0; j < W; j++)
+                {
+                    int cellIndex = i * W + j;
+                    if (SolverUtility.ValueCount(board[cellIndex]) == 1)
+                    {
+                        solver.SetValue(i, j, SolverUtility.GetValue(board[cellIndex]));
+                    }
+                }
+            }
+
+            // Now trust the pencilmarks to the extent of removing any not present
+            for (int i = 0; i < H; i++)
+            {
+                for (int j = 0; j < W; j++)
+                {
+                    int cellIndex = i * W + j;
+                    if (SolverUtility.ValueCount(board[cellIndex]) > 1)
+                    {
+                        if (solver.ClearMask(i, j, ~board[cellIndex]) == LogicResult.Invalid)
                         {
                             return null;
                         }

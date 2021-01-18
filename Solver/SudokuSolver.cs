@@ -16,6 +16,22 @@ namespace SudokuBlazor.Solver
     {
         private uint[,] board;
         public uint[,] Board => board;
+        public uint[] FlatBoard
+        {
+            get
+            {
+                uint[] flatBoard = new uint[NUM_CELLS];
+                for (int i = 0; i < HEIGHT; i++)
+                {
+                    for (int j = 0; j < WIDTH; j++)
+                    {
+                        flatBoard[i * WIDTH + j] = board[i, j];
+                    }
+                }
+                return flatBoard;
+            }
+        }
+
         private readonly List<Constraint> constraints;
         
         /// <summary>
@@ -273,7 +289,7 @@ namespace SudokuBlazor.Solver
         public bool ClearValue(int i, int j, int val)
         {
             uint curMask = board[i, j];
-            uint valMask = 1u << (val - 1);
+            uint valMask = ValueMask(val);
 
             if ((curMask & valMask) == 0)
             {
@@ -286,6 +302,10 @@ namespace SudokuBlazor.Solver
             if ((newMask & ~valueSetMask) == 0)
             {
                 // Can't clear the only remaining bit
+                if (!IsValueSet(curMask))
+                {
+                    board[i, j] = 0;
+                }
                 return false;
             }
 
@@ -399,6 +419,65 @@ namespace SudokuBlazor.Solver
             return (i, j);
         }
 
+
+        /// <summary>
+        /// Performs a single logical step.
+        /// </summary>
+        /// <param name="progressEvent">An event to report progress whenever a new step is found.</param>
+        /// <param name="completedEvent">An event to report the final status of the puzzle (solved, no more logical steps, invalid)</param>
+        /// <param name="cancellationToken">Pass in to support cancelling the solve.</param>
+        /// <returns></returns>
+        public void LogicalStep(EventHandler<(string, uint[])> completedEvent)
+        {
+            StringBuilder logicDescription = new StringBuilder();
+            LogicResult result = StepLogic(logicDescription, true);
+            switch (result)
+            {
+                case LogicResult.None:
+                    completedEvent?.Invoke(null, ("No more logical steps found.", FlatBoard));
+                    return;
+                default:
+                    completedEvent?.Invoke(null, (logicDescription.ToString(), FlatBoard));
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Performs logical solve steps until no more logic is found.
+        /// </summary>
+        /// <param name="progressEvent">An event to report progress whenever a new step is found.</param>
+        /// <param name="completedEvent">An event to report the final status of the puzzle (solved, no more logical steps, invalid)</param>
+        /// <param name="cancellationToken">Pass in to support cancelling the solve.</param>
+        /// <returns></returns>
+        public async Task LogicalSolve(EventHandler<(string, uint[])> progressEvent, EventHandler<(string, uint[])> completedEvent, CancellationToken? cancellationToken)
+        {
+            Stopwatch timeSinceCheck = Stopwatch.StartNew();
+            while (true)
+            {
+                if (timeSinceCheck.ElapsedMilliseconds > 100)
+                {
+                    await Task.Delay(1);
+                    cancellationToken?.ThrowIfCancellationRequested();
+                    timeSinceCheck.Restart();
+                }
+
+                StringBuilder logicDescription = new StringBuilder();
+                LogicResult result = StepLogic(logicDescription);
+                switch (result)
+                {
+                    case LogicResult.None:
+                        completedEvent?.Invoke(null, ("No more logical steps found.", FlatBoard));
+                        return;
+                    case LogicResult.PuzzleComplete:
+                        completedEvent?.Invoke(null, (logicDescription.ToString(), FlatBoard));
+                        return;
+                    default:
+                        progressEvent?.Invoke(null, (logicDescription.ToString(), FlatBoard));
+                        break;
+                }
+            }
+        }
+
         /// <summary>
         /// Finds a single solution to the board. This may not be the only solution.
         /// For the exact same board inputs, the solution will always be the same.
@@ -410,8 +489,6 @@ namespace SudokuBlazor.Solver
         public async Task<bool> FindSolution(CancellationToken? cancellationToken = null)
         {
             Stopwatch timeSinceCheck = Stopwatch.StartNew();
-            ulong numGuesses = 0;
-            ulong numContradictions = 0;
 
             bool wasBruteForcing = isBruteForcing;
             isBruteForcing = true;
@@ -421,8 +498,8 @@ namespace SudokuBlazor.Solver
             {
                 if (timeSinceCheck.ElapsedMilliseconds > 100)
                 {
-                    cancellationToken?.ThrowIfCancellationRequested();
                     await Task.Delay(1);
+                    cancellationToken?.ThrowIfCancellationRequested();
                     timeSinceCheck.Restart();
                 }
 
@@ -460,14 +537,12 @@ namespace SudokuBlazor.Solver
                     }
 
                     // Change the board to only allow this value in the slot
-                    numGuesses++;
                     if (SetValue(i, j, val))
                     {
                         continue;
                     }
                 }
 
-                numContradictions++;
                 if (boardStack.Count == 0)
                 {
                     isBruteForcing = wasBruteForcing;
@@ -498,8 +573,8 @@ namespace SudokuBlazor.Solver
             {
                 if (timeSinceCheck.ElapsedMilliseconds > 100)
                 {
-                    cancellationToken?.ThrowIfCancellationRequested();
                     await Task.Delay(1);
+                    cancellationToken?.ThrowIfCancellationRequested();
                     timeSinceCheck.Restart();
                 }
 
@@ -656,8 +731,8 @@ namespace SudokuBlazor.Solver
                 // Check for cancel
                 if (state.timeSinceCheck.ElapsedMilliseconds > 100)
                 {
-                    state.cancellationToken?.ThrowIfCancellationRequested();
                     await Task.Delay(1);
+                    state.cancellationToken?.ThrowIfCancellationRequested();
                     state.timeSinceCheck.Restart();
                 }
 
@@ -721,10 +796,10 @@ namespace SudokuBlazor.Solver
 
                     if (timeSinceCheck.ElapsedMilliseconds > 100)
                     {
+                        await Task.Delay(1);
                         cancellationToken?.ThrowIfCancellationRequested();
 
                         progressEvent?.Invoke(null, (cellIndex, fixedBoard));
-                        await Task.Delay(1);
                         timeSinceCheck.Restart();
                     }
 
@@ -798,9 +873,9 @@ namespace SudokuBlazor.Solver
         /// </summary>
         /// <param name="stepDescription"></param>
         /// <returns></returns>
-        public LogicResult StepLogic(StringBuilder stepDescription)
+        public LogicResult StepLogic(StringBuilder stepDescription, bool humanStepping = false)
         {
-            LogicResult result = FindNakedSingles(stepDescription);
+            LogicResult result = FindNakedSingles(stepDescription, humanStepping);
             if (result != LogicResult.None)
             {
                 return result;
@@ -854,12 +929,26 @@ namespace SudokuBlazor.Solver
             return LogicResult.None;
         }
 
-        private LogicResult FindNakedSingles(StringBuilder stepDescription)
+        private LogicResult FindNakedSingles(StringBuilder stepDescription, bool humanStepping)
         {
+            if (humanStepping)
+            {
+                return FindNakedSinglesHelper(stepDescription, humanStepping);
+            }
+
             bool haveChange = false;
             while (true)
             {
-                LogicResult findResult = FindNakedSinglesHelper(stepDescription);
+                StringBuilder curStepDescription = new StringBuilder();
+                LogicResult findResult = FindNakedSinglesHelper(curStepDescription, humanStepping);
+                if (stepDescription != null)
+                {
+                    if (stepDescription.Length > 0)
+                    {
+                        stepDescription.AppendLine();
+                    }
+                    stepDescription.Append(curStepDescription);
+                }
                 switch (findResult)
                 {
                     case LogicResult.None:
@@ -873,9 +962,9 @@ namespace SudokuBlazor.Solver
             }
         }
 
-        private LogicResult FindNakedSinglesHelper(StringBuilder stepDescription)
+        private LogicResult FindNakedSinglesHelper(StringBuilder stepDescription, bool humanStepping)
         {
-            const string stepPrefix = "Naked single(s):";
+            string stepPrefix = humanStepping ? "Naked Single:" : "Naked Single(s):";
 
             bool hasUnsetCells = false;
             bool hadChanges = false;
@@ -888,8 +977,8 @@ namespace SudokuBlazor.Solver
                     // If there are no possibilies on a square, then bail out
                     if (mask == 0)
                     {
-                        stepDescription.Clear();
-                        stepDescription.Append($"{stepPrefix} {CellName(i, j)} has no possible values.");
+                        stepDescription.AppendLine();
+                        stepDescription.Append($"{CellName(i, j)} has no possible values.");
                         return LogicResult.Invalid;
                     }
 
@@ -900,21 +989,35 @@ namespace SudokuBlazor.Solver
                         if (ValueCount(mask) == 1)
                         {
                             int value = GetValue(mask);
-                            if (!SetValue(i, j, value))
-                            {
-                                stepDescription.Clear();
-                                stepDescription.Append($"{stepPrefix} {CellName(i, j)} cannot be {value}.");
-                                return LogicResult.Invalid;
-                            }
-
                             if (!hadChanges)
                             {
                                 stepDescription.Append($"{stepPrefix} {CellName(i, j)} = {value}");
                                 hadChanges = true;
+                                if (humanStepping)
+                                {
+                                    return LogicResult.Changed;
+                                }
                             }
                             else
                             {
                                 stepDescription.Append($", {CellName(i, j)} = {value}");
+                            }
+
+                            if (!SetValue(i, j, value))
+                            {
+                                for (int ci = 0; ci < 9; ci++)
+                                {
+                                    for (int cj = 0; cj < 9; cj++)
+                                    {
+                                        if (board[ci, cj] == 0)
+                                        {
+                                            stepDescription.AppendLine().Append($"{CellName(ci, cj)} has no candidates remaining.");
+                                            return LogicResult.Invalid;
+                                        }
+                                    }
+                                }
+                                stepDescription.AppendLine().Append($"{CellName(i, j)} cannot be {value}.");
+                                return LogicResult.Invalid;
                             }
                         }
                     }
@@ -922,6 +1025,11 @@ namespace SudokuBlazor.Solver
             }
             if (!hasUnsetCells)
             {
+                if (stepDescription.Length > 0)
+                {
+                    stepDescription.AppendLine();
+                }
+                stepDescription.Append("Solution found!");
                 return LogicResult.PuzzleComplete;
             }
             return hadChanges ? LogicResult.Changed : LogicResult.None;
@@ -929,7 +1037,7 @@ namespace SudokuBlazor.Solver
 
         private LogicResult FindHiddenSingle(StringBuilder stepDescription)
         {
-            const string stepPrefix = "Hidden single(s):";
+            string stepPrefix = "Hidden single:";
 
             LogicResult finalFindResult = LogicResult.None;
             foreach (var group in Groups)
@@ -964,7 +1072,7 @@ namespace SudokuBlazor.Solver
                             stepDescription.Append($"{stepPrefix} {CellName(vali, valj)} cannot be set to {val}.");
                             return LogicResult.Invalid;
                         }
-                        stepDescription.Append($"{stepPrefix} Hidden single {val} in {group.Name} {CellName(vali, valj)}");
+                        stepDescription.Append($"Hidden single {val} in {group.Name} {CellName(vali, valj)}");
                         return LogicResult.Changed;
                     }
                     else if (numWithVal == 0)
@@ -1301,9 +1409,18 @@ namespace SudokuBlazor.Solver
                                     StringBuilder contradictionReason = new();
                                     if (!boardCopy.SetValue(i, j, v) || !boardCopy.ConsolidateBoard(contradictionReason))
                                     {
+                                        StringBuilder formattedContraditionReason = new StringBuilder();
+                                        foreach (string line in contradictionReason.ToString().Split('\n'))
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(line))
+                                            {
+                                                formattedContraditionReason.Append("  ").Append(line).AppendLine();
+                                            }
+                                        }
+
                                         stepDescription.Append($"Setting {CellName(i, j)} to {v} causes a contradiction:");
                                         stepDescription.AppendLine();
-                                        stepDescription.Append(contradictionReason);
+                                        stepDescription.Append(formattedContraditionReason);
                                         if (!ClearValue(i, j, v))
                                         {
                                             stepDescription.AppendLine();

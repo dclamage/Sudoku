@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using SudokuBlazor.Models;
+using SudokuBlazor.Solver;
 
 namespace SudokuBlazor.Shared
 {
@@ -36,6 +37,22 @@ namespace SudokuBlazor.Shared
         private readonly (double, double)[] cornerMarkOffsets = new (double, double)[9];
 
         public int[] CellValues => (int[])cellValues.Clone();
+        public uint[] GetCellCandidates(bool respectCenterMarks)
+        {
+            uint[] cellCandidates = new uint[81];
+            for (int i = 0; i < 81; i++)
+            {
+                if (cellValues[i] != 0)
+                {
+                    cellCandidates[i] = SolverUtility.ValueMask(cellValues[i]) | SolverUtility.valueSetMask;
+                }
+                else
+                {
+                    cellCandidates[i] = (!respectCenterMarks || cellCenterMarks[i] == 0) ? SolverUtility.ALL_VALUES_MASK : cellCenterMarks[i];
+                }
+            }
+            return cellCandidates;
+        }
 
         protected override void OnInitialized()
         {
@@ -156,7 +173,7 @@ namespace SudokuBlazor.Shared
             return true;
         }
 
-        public void SetAllCellValues(int[] newCellValues)
+        public bool SetAllCellValues(int[] newCellValues)
         {
             bool changed = false;
             for (int cellIndex = 0; cellIndex < cellValues.Length; cellIndex++)
@@ -188,6 +205,7 @@ namespace SudokuBlazor.Shared
                 SetDirty();
                 CheckConflicts();
             }
+            return changed;
         }
 
         private static Text CreateFilledText(int cellIndex, int value, string color) => new Text(
@@ -284,22 +302,39 @@ namespace SudokuBlazor.Shared
             return dirty;
         }
 
-        public void SetAllCenterPencilMarks(uint[] candidates)
+        public enum SingleValueBehavior
+        {
+            AlwaysKeepAsPencilmark,
+            RespectValueSetBit,
+            SingleValueAlwaysSetAsValue
+        }
+        public bool SetAllCenterPencilMarks(uint[] candidates, SingleValueBehavior singleValueBehavior = SingleValueBehavior.AlwaysKeepAsPencilmark)
         {
             bool changed = false;
             for (int cellIndex = 0; cellIndex < cellValues.Length; cellIndex++)
             {
                 uint curCandidates = cellCenterMarks[cellIndex];
-                uint newCandidates = candidates[cellIndex] & ~(1u << 31);
+                uint newCandidates = candidates[cellIndex];
                 if (cellIsGiven[cellIndex] || cellValues[cellIndex] != 0)
                 {
                     continue;
                 }
 
-                bool curChanged = false;
+                if (singleValueBehavior == SingleValueBehavior.RespectValueSetBit && SolverUtility.IsValueSet(candidates[cellIndex]) ||
+                    singleValueBehavior == SingleValueBehavior.SingleValueAlwaysSetAsValue && SolverUtility.ValueCount(newCandidates) == 1)
+                {
+                    int newValue = SolverUtility.GetValue(newCandidates);
+                    ClearPencilmarkVisuals(cellIndex);
+                    cellValues[cellIndex] = newValue;
+                    cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, newValue, filledColor);
+                    changed = true;
+                    continue;
+                }
+
+                bool centerMarksChanged = false;
                 for (int value = 1; value <= 9; value++)
                 {
-                    uint valueMask = 1u << (value - 1);
+                    uint valueMask = SolverUtility.ValueMask(value);
                     bool curHaveValue = (curCandidates & valueMask) != 0;
                     bool newHaveValue = (newCandidates & valueMask) != 0;
                     if (curHaveValue != newHaveValue)
@@ -308,13 +343,13 @@ namespace SudokuBlazor.Shared
                         {
                             cellText.Remove((cellIndex, ValueType.Center, value));
                         }
-                        curChanged = true;
+                        centerMarksChanged = true;
                     }
                 }
 
-                if (curChanged)
+                if (centerMarksChanged)
                 {
-                    cellCenterMarks[cellIndex] = newCandidates;
+                    cellCenterMarks[cellIndex] = newCandidates & ~SolverUtility.valueSetMask;
                     ReRenderCenterMarks(cellIndex);
                     changed = true;
                 }
@@ -324,6 +359,7 @@ namespace SudokuBlazor.Shared
             {
                 SetDirty();
             }
+            return changed;
         }
 
         public bool ToggleCornerMarks(IEnumerable<int> cellIndexes, int value)

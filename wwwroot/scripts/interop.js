@@ -42,6 +42,9 @@ window.setSidebarSize = () => {
 window.doSaveSvgAsPng = (element, name) => {
     saveSvgAsPng(element, name);
 }
+window.scrollToBottom = (element) => {
+    element.scrollTop = element.scrollHeight;
+}
 
 //Prevents backspace except in the case of textareas and text inputs to prevent user navigation.
 $(document).keydown(function (e) {
