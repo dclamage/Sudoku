@@ -92,26 +92,41 @@
     }
     else
     {
-        @for (int colorIndexIter = 0; colorIndexIter < colors.Count; colorIndexIter += 3)
-        {
-            int colorIndex = colorIndexIter;
-            <div class="d-flex justify-center">
-                @for(int colorSubIndex = 0; colorSubIndex < 3; colorSubIndex++)
-                {
-                    int colorFinalIndex = colorIndex + colorSubIndex;
-                    <MudTooltip Text="@colors[colorFinalIndex].Name">
-                        <MudFab
-                            @onmousedown:preventDefault=true
-                            Class="ma-1 rounded numpad-button"
-                            Style="@colors[colorFinalIndex].Style"
-                            DisableElevation="true"
-                            Size="Size.Large"
-                            Disabled="@IsKeypadDisabled"
-                            OnClick="@(() => NumpadButtonPressed(colorFinalIndex + 1))" />
-                        </MudTooltip>
-                }
-            </div>
-        }
+        <div @ref="colorScroll" style="max-height: calc(12rem + 32px); overflow-y: scroll;">
+            @for (int colorIndexIter = 0; colorIndexIter < colors.Count; colorIndexIter += 3)
+            {
+                int colorIndex = colorIndexIter;
+                <div class="d-flex justify-center">
+                    @for(int colorSubIndex = 0; colorSubIndex < 3; colorSubIndex++)
+                    {
+                        int colorFinalIndex = colorIndex + colorSubIndex;
+                        if (colorFinalIndex < colors.Count)
+                        {
+                            <MudFabExt
+                                @onmousedown:preventDefault=true
+                                title="@colors[colorFinalIndex].Name"
+                                Class="ma-1 rounded numpad-button"
+                                Style="@colors[colorFinalIndex].Style"
+                                DisableElevation="true"
+                                Size="Size.Large"
+                                Disabled="@IsKeypadDisabled"
+                                OnClick="@(() => NumpadButtonPressed(colorFinalIndex + 1))">
+                                @if(colorFinalIndex >= 9)
+                                {
+                                    <MudIconButton
+                                        @onmousedown:preventDefault=true
+                                        title="Delete Custom Color"
+                                        Class="custom-color-close"
+                                        Size="Size.Small"
+                                        Icon="@Icons.Material.Close"
+                                        OnClick="@(() => DeleteCustomColor(colorFinalIndex))" />
+                                }
+                            </MudFabExt>
+                        }
+                    }
+                </div>
+            }
+        </div>
 
         <div class="d-flex justify-center">
             <MudTooltip Text="Clear Coloring">
@@ -125,6 +140,20 @@
                     IconSize="Size.Large"
                     Disabled="@IsKeypadDisabled"
                     OnClick="@(() => NumpadButtonPressed(0))" />
+            </MudTooltip>
+            <MudTooltip Text="Choose Custom Color">
+                <input class="mud-button-root mud-fab mud-ripple mud-fab-disable-elevation ma-1 px-2 rounded numpad-button" type="color" @bind="PickedColor" />
+            </MudTooltip>
+            <MudTooltip Text="Add chosen color">
+                <MudFabExt
+                    @onmousedown:preventDefault=true
+                    Class="ma-1 px-2 rounded numpad-button"
+                    Style="@PickedColorStyle"
+                    DisableElevation="true"
+                    Icon="@Icons.Material.LibraryAdd"
+                    Size="Size.Large"
+                    IconSize="Size.Large"
+                    OnClick="AddCustomColor" />
             </MudTooltip>
         </div>
     }

@@ -18,6 +18,11 @@ namespace MudBlazor
         .Build();
 
         /// <summary>
+        /// Child content of component.
+        /// </summary>
+        [Parameter] public RenderFragment ChildContent { get; set; }
+
+        /// <summary>
         /// The color of the component. It supports the theme colors.
         /// </summary>
         [Parameter] public Color Color { get; set; } = Color.Default;

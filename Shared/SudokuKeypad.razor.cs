@@ -20,6 +20,8 @@ namespace SudokuBlazor.Shared
         public Action RedoPressedAction { get; set; }
         [Parameter]
         public Func<Task> SaveScreenshotAsyncAction { get; set; }
+        [Parameter]
+        public Action<string> CustomColorPressedAction { get; set; }
 
         // Public interface
         public enum MarkMode
@@ -78,8 +80,25 @@ namespace SudokuBlazor.Shared
             new ColorInfo("Blush", "#ff7bd9"), 
         };
 
+        public string PickedColor
+        {
+            get => _pickedColor;
+            set
+            {
+                if (_pickedColor != value)
+                {
+                    _pickedColor = value;
+                    SetDirty();
+                }
+            }
+        }
+        private string _pickedColor = "#ffffff";
+        private string PickedColorStyle => $"background-color: {PickedColor};";
+        private bool scrollToBottom = false;
+
         // Components
         private ElementReference outerDiv;
+        private ElementReference colorScroll;
 
         protected override bool ShouldRender()
         {
@@ -94,11 +113,42 @@ namespace SudokuBlazor.Shared
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             await JS.InvokeVoidAsync("setKeypadSize", outerDiv);
+            if (scrollToBottom)
+            {
+                await JS.InvokeVoidAsync("scrollToBottom", colorScroll);
+                scrollToBottom = false;
+            }
         }
 
         protected void NumpadButtonPressed(int value)
         {
-            NumpadPressedAction?.Invoke(value);
+            if (value <= 9)
+            {
+                NumpadPressedAction?.Invoke(value);
+            }
+            else
+            {
+                CustomColorPressedAction?.Invoke(colors[value - 1].HexValue);
+            }
+        }
+
+        protected void AddCustomColor()
+        {
+            if (!colors.Any(c => c.HexValue == PickedColor))
+            {
+                colors.Add(new("Custom Color", PickedColor));
+                SetDirty();
+                scrollToBottom = true;
+            }
+        }
+
+        protected void DeleteCustomColor(int index)
+        {
+            if (index < colors.Count)
+            {
+                colors.RemoveAt(index);
+                SetDirty();
+            }
         }
 
         protected void ColorModePressed(MarkMode markMode)

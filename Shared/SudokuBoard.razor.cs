@@ -347,6 +347,19 @@ namespace SudokuBlazor.Shared
             CellValueEntered(value);
         }
 
+        protected void CustomColorPressed(string value)
+        {
+            bool hasChange = false;
+            foreach (int cellIndex in selection.SelectedCellIndices())
+            {
+                hasChange |= coloring.ColorCell(cellIndex, value);
+            }
+            if (hasChange)
+            {
+                StoreSnapshot();
+            }
+        }
+
         private void CellValueEntered(int value)
         {
             if (SolveInProgress)
