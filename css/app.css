@@ -35,6 +35,14 @@ svg.sudoku {
     }
 }
 
+.custom-color-close {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    color: #ff0000;
+    background-color: rgba(230, 230, 230, 0.75);
+}
+
 svg.sudoku:focus {
     outline: none;
 }
