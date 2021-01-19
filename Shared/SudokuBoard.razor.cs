@@ -14,6 +14,8 @@ namespace SudokuBlazor.Shared
         [Parameter]
         public string Givens { get; set; }
 
+        public bool EditingEnabled { get; set; }
+
         public bool SolveInProgress
         {
             get => _solveInProgress;
@@ -372,7 +374,10 @@ namespace SudokuBlazor.Shared
             {
                 foreach (int cellIndex in selection.SelectedCellIndices())
                 {
-                    hasChange |= values.ClearCell(cellIndex);
+                    hasChange |= values.ClearCell(
+                        cellIndex: cellIndex,
+                        fullClear: false,
+                        clearGivens: EditingEnabled);
                 }
             }
             else
@@ -382,7 +387,7 @@ namespace SudokuBlazor.Shared
                     case SudokuKeypad.MarkMode.Fill:
                         foreach (int cellIndex in selection.SelectedCellIndices())
                         {
-                            hasChange |= values.SetCellValue(cellIndex, value);
+                            hasChange |= values.SetCellValue(cellIndex, value, EditingEnabled);
                         }
                         break;
                     case SudokuKeypad.MarkMode.Corner:

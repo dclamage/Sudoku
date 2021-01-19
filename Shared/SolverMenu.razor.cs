@@ -30,7 +30,40 @@ namespace SudokuBlazor.Shared
         }
         private bool _solveInProgress = false;
         private bool lastActionWasStep = false;
-        public bool RespectCenterMarks { get; set; } = false;
+
+        public bool RespectFilledMarks
+        {
+            get => _respectFilledMarks;
+            set
+            {
+                if (_respectFilledMarks != value)
+                {
+                    _respectFilledMarks = value;
+                    if (!value)
+                    {
+                        RespectCenterMarks = false;
+                    }
+                }
+            }
+        }
+        private bool _respectFilledMarks = false;
+
+        public bool RespectCenterMarks
+        {
+            get => _respectCenterMarks;
+            set
+            {
+                if (_respectCenterMarks != value)
+                {
+                    _respectCenterMarks = value;
+                    if (value)
+                    {
+                        RespectFilledMarks = true;
+                    }
+                }
+            }
+        }
+        private bool _respectCenterMarks = false;
 
         private const int spinnerDelay = 2000;
         private int spinnerToken = 0;
@@ -116,7 +149,12 @@ namespace SudokuBlazor.Shared
                 lastActionWasStep = true;
             }
 
-            uint[] cellValues = Board.Values.GetCellCandidates(RespectCenterMarks);
+            if (!RespectFilledMarks)
+            {
+                needSnapshot |= Board.Values.ResetToGivens();
+            }
+            uint[] cellValues = Board.Values.GetCellCandidates(RespectFilledMarks, RespectCenterMarks);
+            RespectFilledMarks = true;
             RespectCenterMarks = true;
 
             await initSolverWorkersTask;
@@ -130,12 +168,14 @@ namespace SudokuBlazor.Shared
             ConsoleLines.Add(parameters.Item1);
             if (parameters.Item2 != null)
             {
-                if (Board.Values.SetAllCenterPencilMarks(parameters.Item2, SudokuValues.SingleValueBehavior.RespectValueSetBit))
-                {
-                    Board.StoreSnapshot();
-                }
+                needSnapshot |= Board.Values.SetAllCenterPencilMarks(parameters.Item2, SudokuValues.SingleValueBehavior.RespectValueSetBit);
+            }
+            if (needSnapshot)
+            {
+                Board.StoreSnapshot();
             }
 
+            needSnapshot = false;
             solveCancelled = false;
             SolveInProgress = false;
             StateHasChanged();
@@ -150,7 +190,11 @@ namespace SudokuBlazor.Shared
             needSnapshot = false;
             ConsoleLines.Clear();
 
-            uint[] cellValues = Board.Values.GetCellCandidates(RespectCenterMarks);
+            if (!RespectFilledMarks)
+            {
+                needSnapshot |= Board.Values.ResetToGivens();
+            }
+            uint[] cellValues = Board.Values.GetCellCandidates(RespectFilledMarks, RespectCenterMarks);
 
             await initSolverWorkersTask;
             await solverService.RunAsync(s => s.PrepSolve());
@@ -170,10 +214,11 @@ namespace SudokuBlazor.Shared
             ConsoleLines.Add(parameters.Item1);
             if (parameters.Item2 != null)
             {
-                if (Board.Values.SetAllCenterPencilMarks(parameters.Item2, SudokuValues.SingleValueBehavior.RespectValueSetBit) || needSnapshot)
-                {
-                    Board.StoreSnapshot();
-                }
+                needSnapshot |= Board.Values.SetAllCenterPencilMarks(parameters.Item2, SudokuValues.SingleValueBehavior.RespectValueSetBit);
+            }
+            if (needSnapshot)
+            {
+                Board.StoreSnapshot();
             }
 
             solveCancelled = false;
@@ -199,7 +244,11 @@ namespace SudokuBlazor.Shared
             displaySpinner = false;
             ConsoleLines.Clear();
 
-            uint[] cellValues = Board.Values.GetCellCandidates(RespectCenterMarks);
+            if (!RespectFilledMarks)
+            {
+                needSnapshot |= Board.Values.ResetToGivens();
+            }
+            uint[] cellValues = Board.Values.GetCellCandidates(RespectFilledMarks, RespectCenterMarks);
 
             await initSolverWorkersTask;
             await solverService.RunAsync(s => s.PrepSolve());
@@ -219,12 +268,14 @@ namespace SudokuBlazor.Shared
             }
             else
             {
-                if (Board.Values.SetAllCellValues(solveResult))
-                {
-                    Board.StoreSnapshot();
-                }
+                needSnapshot |= Board.Values.SetAllCellValues(solveResult);
+            }
+            if (needSnapshot)
+            {
+                Board.StoreSnapshot();
             }
 
+            needSnapshot = false;
             solveCancelled = false;
             SolveInProgress = false;
             StateHasChanged();
@@ -238,7 +289,7 @@ namespace SudokuBlazor.Shared
             displaySpinner = false;
             ReceiveSolutionCountProgress(null, 0);
 
-            uint[] cellValues = Board.Values.GetCellCandidates(RespectCenterMarks);
+            uint[] cellValues = Board.Values.GetCellCandidates(RespectFilledMarks, RespectCenterMarks);
 
             await initSolverWorkersTask;
             await solverService.RunAsync(s => s.PrepSolve());
@@ -272,7 +323,12 @@ namespace SudokuBlazor.Shared
 
         private void FillRuleCandidates()
         {
-            int[] board = Board.Values.CellValues;
+            bool resetBoard = false;
+            if (!RespectFilledMarks)
+            {
+                resetBoard = Board.Values.ResetToGivens();
+            }
+            int[] board = Board.Values.GetCellValues(RespectFilledMarks);
 
             SudokuSolver solver = new SudokuSolver();
             for (int i = 0; i < 9; i++)
@@ -287,7 +343,7 @@ namespace SudokuBlazor.Shared
                     }
                 }
             }
-            if (Board.Values.SetAllCenterPencilMarks(solver.FlatBoard, SudokuValues.SingleValueBehavior.RespectValueSetBit))
+            if (Board.Values.SetAllCenterPencilMarks(solver.FlatBoard, SudokuValues.SingleValueBehavior.RespectValueSetBit) || resetBoard)
             {
                 Board.StoreSnapshot();
             }
@@ -302,7 +358,11 @@ namespace SudokuBlazor.Shared
             needSnapshot = false;
             ReceiveCandidateProgress(null, (0, null));
 
-            int[] cellValues = Board.Values.CellValues;
+            if (!RespectFilledMarks)
+            {
+                needSnapshot |= Board.Values.ResetToGivens();
+            }
+            int[] cellValues = Board.Values.GetCellValues(RespectFilledMarks);
 
             await initSolverWorkersTask;
             await solverService.RunAsync(s => s.PrepSolve());

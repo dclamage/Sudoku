@@ -16,11 +16,13 @@ namespace SudokuBlazor.Pages
         private ElementReference drawerDiv;
         private SudokuBoard sudokuBoard;
         private PuzzleInfoMenu puzzleInfoMenu;
+        private ConstructionMenu constructionMenu;
         private SolverMenu solverMenu;
 
         // Element accessors
         public SudokuBoard SudokuBoard => sudokuBoard;
         public PuzzleInfoMenu PuzzleInfoMenu => puzzleInfoMenu;
+        public ConstructionMenu ConstructionMenu => constructionMenu;
         public SolverMenu SolverMenu => solverMenu;
 
         // State
@@ -71,6 +73,11 @@ namespace SudokuBlazor.Pages
         {
             this.author = author;
             StateHasChanged();
+        }
+
+        void EditingToggled(bool enabled)
+        {
+            sudokuBoard.EditingEnabled = enabled;
         }
     }
 }

@@ -36,15 +36,28 @@ namespace SudokuBlazor.Shared
         // Tables
         private readonly (double, double)[] cornerMarkOffsets = new (double, double)[9];
 
-        public int[] CellValues => (int[])cellValues.Clone();
-        public uint[] GetCellCandidates(bool respectCenterMarks)
+        public int[] GetCellValues(bool respectFilledMarks)
+        {
+            if (respectFilledMarks)
+            {
+                return (int[])cellValues.Clone();
+            }
+
+            int[] result = new int[81];
+            for (int i = 0; i < 81; i++)
+            {
+                result[i] = cellIsGiven[i] ? cellValues[i] : 0;
+            }
+            return result;
+        }
+        public uint[] GetCellCandidates(bool respectFilledMarks, bool respectCenterMarks)
         {
             uint[] cellCandidates = new uint[81];
             for (int i = 0; i < 81; i++)
             {
                 if (cellValues[i] != 0)
                 {
-                    cellCandidates[i] = SolverUtility.ValueMask(cellValues[i]) | SolverUtility.valueSetMask;
+                    cellCandidates[i] = respectFilledMarks || cellIsGiven[i] ? SolverUtility.ValueMask(cellValues[i]) | SolverUtility.valueSetMask : SolverUtility.ALL_VALUES_MASK;
                 }
                 else
                 {
@@ -74,12 +87,13 @@ namespace SudokuBlazor.Shared
             cornerMarkOffsets[8] = (offsetX2, offsetY1);
         }
 
-        private record Snapshot(int[] CellValues, uint[] CellCornerMarks, uint[] CellCenterMarks);
+        private record Snapshot(int[] CellValues, bool[] CellIsGiven, uint[] CellCornerMarks, uint[] CellCenterMarks);
 
         public object TakeSnapshot()
         {
             return new Snapshot(
                 (int[])cellValues.Clone(),
+                (bool[])cellIsGiven.Clone(),
                 (uint[])cellCornerMarks.Clone(),
                 (uint[])cellCenterMarks.Clone()
             );
@@ -91,9 +105,9 @@ namespace SudokuBlazor.Shared
             {
                 for (int cellIndex = 0; cellIndex < 81; cellIndex++)
                 {
-                    if (cellValues[cellIndex] != snapshot.CellValues[cellIndex])
+                    if (cellValues[cellIndex] != snapshot.CellValues[cellIndex] || cellIsGiven[cellIndex] != snapshot.CellIsGiven[cellIndex])
                     {
-                        SetCellValue(cellIndex, snapshot.CellValues[cellIndex]);
+                        SetCellValue(cellIndex, snapshot.CellValues[cellIndex], snapshot.CellIsGiven[cellIndex], true);
                         SetDirty();
                     }
 
@@ -140,7 +154,10 @@ namespace SudokuBlazor.Shared
             {
                 return;
             }
-            ClearCell(cellIndex, fullClear: true);
+            ClearCell(
+                cellIndex: cellIndex,
+                fullClear: true,
+                clearGivens: true);
 
             cellIsGiven[cellIndex] = true;
             cellValues[cellIndex] = value;
@@ -149,14 +166,36 @@ namespace SudokuBlazor.Shared
             CheckConflicts();
         }
 
-        public bool SetCellValue(int cellIndex, int value)
+        public bool SetCellValue(int cellIndex, int value, bool given, bool force = false)
         {
             if (value < 1 || value > 9)
             {
-                return ClearCell(cellIndex);
+                return ClearCell(
+                    cellIndex: cellIndex,
+                    fullClear: false,
+                    clearGivens: given || force);
             }
 
-            if (cellIsGiven[cellIndex] || cellValues[cellIndex] == value)
+            if (cellValues[cellIndex] == value)
+            {
+                if (given && !cellIsGiven[cellIndex])
+                {
+                    cellIsGiven[cellIndex] = true;
+                    cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, value, givenColor);
+                    SetDirty();
+                    return true;
+                }
+                else if (force && !given && cellIsGiven[cellIndex])
+                {
+                    cellIsGiven[cellIndex] = false;
+                    cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, value, filledColor);
+                    SetDirty();
+                    return true;
+                }
+                return false;
+            }
+
+            if (!force && !given && cellIsGiven[cellIndex])
             {
                 return false;
             }
@@ -167,7 +206,8 @@ namespace SudokuBlazor.Shared
             }
 
             cellValues[cellIndex] = value;
-            cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, value, filledColor);
+            cellIsGiven[cellIndex] = given;
+            cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, value, given ? givenColor : filledColor);
             SetDirty();
             CheckConflicts();
             return true;
@@ -226,7 +266,10 @@ namespace SudokuBlazor.Shared
             {
                 foreach (int cellIndex in cellIndexes)
                 {
-                    dirty = ClearCell(cellIndex);
+                    dirty = ClearCell(
+                        cellIndex: cellIndex,
+                        fullClear: false,
+                        clearGivens: false);
                 }
                 return dirty;
             }
@@ -441,9 +484,9 @@ namespace SudokuBlazor.Shared
             }
         }
 
-        public bool ClearCell(int cellIndex, bool fullClear = false)
+        public bool ClearCell(int cellIndex, bool fullClear, bool clearGivens)
         {
-            if (cellIsGiven[cellIndex])
+            if (!clearGivens && cellIsGiven[cellIndex])
             {
                 return false;
             }
@@ -511,6 +554,16 @@ namespace SudokuBlazor.Shared
                     }
                 }
             }
+        }
+
+        public bool ResetToGivens()
+        {
+            bool changed = false;
+            for (int i = 0; i < 81; i++)
+            {
+                changed |= ClearCell(i, true, false);
+            }
+            return changed;
         }
 
         public int GetCellValue(int cellIndex)

@@ -44,7 +44,13 @@ else
     <div class="d-flex align-center pa-2 mx-2">
         <MudButton Color="Color.Primary" OnClick="FillTrueCandidates" Disabled="@SolveInProgress" title="Fill all candidates which actually lead to a solution.&#10;Useful when the puzzle has multiple solutions.&#10;Ignores the &quot;Respect centermarks&quot; option.">Fill True Candidates</MudButton>
     </div>
-    <div class="d-flex align-center pa-2 mx-2">
-        <MudSwitch @bind-Checked="@RespectCenterMarks" Label="Respect centermarks" Color="Color.Primary" />
-    </div>
+    <MudPaper Class="d-flex flex-column align-center pa-2 mx-2">
+        <div class="d-flex align-center pa-0 ma-0">
+            <MudText Typo="Typo.h6" Align="Align.Center">Respect Non-Givens</MudText>
+        </div>
+        <div class="d-flex align-center pa-0 ma-0">
+            <MudSwitch @bind-Checked="@RespectFilledMarks" Label="Filled Digits" Color="Color.Primary" />
+            <MudSwitch @bind-Checked="@RespectCenterMarks" Label="Centermarks" Color="Color.Primary" />
+        </div>
+    </MudPaper>
 }
