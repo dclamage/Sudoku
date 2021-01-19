@@ -15,10 +15,12 @@ namespace SudokuBlazor.Pages
         private ElementReference appbarDiv;
         private ElementReference drawerDiv;
         private SudokuBoard sudokuBoard;
+        private PuzzleInfoMenu puzzleInfoMenu;
         private SolverMenu solverMenu;
 
         // Element accessors
         public SudokuBoard SudokuBoard => sudokuBoard;
+        public PuzzleInfoMenu PuzzleInfoMenu => puzzleInfoMenu;
         public SolverMenu SolverMenu => solverMenu;
 
         // State
@@ -37,6 +39,10 @@ namespace SudokuBlazor.Pages
         }
         private bool _drawerOpen = false;
 
+        // Title
+        private string puzzleName = "Sudoku";
+        private string author = "";
+
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             await JS.InvokeVoidAsync("setAppbarHeight", appbarDiv);
@@ -53,6 +59,18 @@ namespace SudokuBlazor.Pages
         void ToggleDrawer()
         {
             DrawerOpen = !DrawerOpen;
+        }
+
+        void PuzzleNameChanged(string puzzleName)
+        {
+            this.puzzleName = string.IsNullOrWhiteSpace(puzzleName) ? "Sudoku" : puzzleName;
+            StateHasChanged();
+        }
+
+        void AuthorChanged(string author)
+        {
+            this.author = author;
+            StateHasChanged();
         }
     }
 }

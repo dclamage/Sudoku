@@ -1,0 +1,14 @@
+﻿<MudGrid>
+    <MudItem xs="12" sm="12" md="12">
+        <MudTextField @bind-Value="PuzzleName" Label="Puzzle Name" Variant="Variant.Text"></MudTextField>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12">
+        <MudTextField @bind-Value="Author" Label="Author" Variant="Variant.Text"></MudTextField>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12">
+        <MudTextField @bind-Value="Description" T="string" Label="Description" Variant="Variant.Text" Lines="5" />
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12">
+        <MudTextField @bind-Value="Rules" T="string" Label="Rules" Variant="Variant.Text" Lines="5" />
+    </MudItem>
+</MudGrid>

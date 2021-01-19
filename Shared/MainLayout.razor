@@ -1,7 +1,17 @@
 @inherits LayoutComponentBase
 
-<MudThemeProvider/>
+<MudThemeProvider Theme="CustomTheme"/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 
 @Body
+
+@code{
+    MudTheme CustomTheme = new MudTheme()
+    {
+        LayoutProperties = new LayoutProperties()
+        {
+            DrawerWidth = "400px"
+        }
+    };
+}

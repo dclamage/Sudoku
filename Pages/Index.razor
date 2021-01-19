@@ -5,12 +5,22 @@
 
 <MudLayout>
     <div @ref="appbarDiv">
-        <MudAppBar Elevation="1" Dense="true">
+        <MudAppBar Elevation="1" Fixed="true">
             <MudTooltip Text="@(DrawerOpen ? "Close Drawer" : "Open Drawer")">
                 <MudIconButton Icon="@Icons.Material.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
             </MudTooltip>
             <MudAppBarSpacer />
-            <MudText Typo="Typo.h5" Class="mudblazor-appbar-brand-text">Sudoku</MudText>
+            <MudGrid Spacing="0" Justify="Justify.Center">
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mudblazor-appbar-brand-text">@puzzleName</MudText>
+                </MudItem>
+                @if (!string.IsNullOrWhiteSpace(author))
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.subtitle2" Align="Align.Center" Class="mudblazor-appbar-brand-text">by @author</MudText>
+                    </MudItem>
+                }
+            </MudGrid>
             <MudAppBarSpacer />
             <MudTooltip Text="GitHub repository">
                 <MudIconButton Icon="@Icons.Custom.GitHub" Color="Color.Inherit" Link="https://github.com/dclamage/Sudoku" Target="_blank" />
@@ -20,9 +30,44 @@
     <MudDrawer @bind-Open="@DrawerOpen" Clipped="true" Elevation="1">
         <div @ref="drawerDiv">
             <MudDrawerHeader>
-                <MudText Typo="Typo.h6">Solver</MudText>
+                <MudText Typo="Typo.h6">Setting Tools</MudText>
             </MudDrawerHeader>
-            <SolverMenu @ref="solverMenu" IndexPage="this" />
+            <MudExpansionPanels MultiExpansion="true">
+                <MudExpansionPanel>
+                    <TitleContent>
+                        <div class="d-flex">
+                            <MudIcon Icon="@Icons.Material.Info" class="mr-3"></MudIcon>
+                            <MudText>Puzzle Info</MudText>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                        <PuzzleInfoMenu @ref="puzzleInfoMenu"
+                            PuzzleNameChanged="PuzzleNameChanged"
+                            AuthorChanged="AuthorChanged" />
+                    </ChildContent>
+                </MudExpansionPanel>
+                <MudExpansionPanel>
+                    <TitleContent>
+                        <div class="d-flex">
+                            <MudIcon Icon="@Icons.Material.Construction" class="mr-3"></MudIcon>
+                            <MudText>Construct</MudText>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                    </ChildContent>
+                </MudExpansionPanel>
+                <MudExpansionPanel>
+                    <TitleContent>
+                        <div class="d-flex">
+                            <MudIcon Icon="@Icons.Material.Computer" class="mr-3"></MudIcon>
+                            <MudText>Solver</MudText>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                        <SolverMenu @ref="solverMenu" IndexPage="this" />
+                    </ChildContent>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
         </div>
     </MudDrawer>
     <MudMainContent Class="pt-16 px-16">
