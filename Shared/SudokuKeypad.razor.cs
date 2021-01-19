@@ -88,6 +88,7 @@ namespace SudokuBlazor.Shared
                 if (_pickedColor != value)
                 {
                     _pickedColor = value;
+                    AddCustomColor();
                     SetDirty();
                 }
             }
@@ -95,10 +96,22 @@ namespace SudokuBlazor.Shared
         private string _pickedColor = "#ffffff";
         private string PickedColorStyle => $"background-color: {PickedColor};";
         private bool scrollToBottom = false;
+        private string NumpadScrollClass
+        {
+            get
+            {
+                string scrollClass = "numpad-outer";
+                if (currentMarkMode != MarkMode.Color || colors.Count <= 9)
+                {
+                    scrollClass += " noscroll";
+                }
+                return scrollClass;
+            }
+        }
 
         // Components
         private ElementReference outerDiv;
-        private ElementReference colorScroll;
+        private ElementReference numpadScroll;
 
         protected override bool ShouldRender()
         {
@@ -115,7 +128,7 @@ namespace SudokuBlazor.Shared
             await JS.InvokeVoidAsync("setKeypadSize", outerDiv);
             if (scrollToBottom)
             {
-                await JS.InvokeVoidAsync("scrollToBottom", colorScroll);
+                await JS.InvokeVoidAsync("scrollToBottom", numpadScroll);
                 scrollToBottom = false;
             }
         }

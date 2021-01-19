@@ -51,49 +51,34 @@
 
     <MudDivider DividerType="DividerType.Middle" Class="my-3"/>
 
-    @if (currentMarkMode != MarkMode.Color)
-    {
-        @for(int row = 0; row < 3; row++)
+    <div @ref="numpadScroll" class="@NumpadScrollClass">
+        @if (currentMarkMode != MarkMode.Color)
         {
-            int localRow = row;
-            <div class="d-flex justify-center">
-            @for(int i = 1; i <= 3; i++)
+            for(int row = 0; row < 3; row++)
             {
-                int locali = i;
-                int value = localRow * 3 + locali;
-                <MudFab
-                    @onmousedown:preventDefault=true
-                    Class="ma-1 rounded numpad-button"
-                    Variant="Variant.Filled"
-                    Color="Color.Primary"
-                    DisableElevation="true"
-                    Size="Size.Large"
-                    Label="@value.ToString()"
-                    Disabled="@IsKeypadDisabled"
-                    OnClick="@(() => NumpadButtonPressed(value))" />
+                int localRow = row;
+                <div class="d-flex justify-center">
+                    @for(int i = 1; i <= 3; i++)
+                    {
+                        int locali = i;
+                        int value = localRow * 3 + locali;
+                        <MudFab
+                            @onmousedown:preventDefault=true
+                            Class="ma-1 rounded numpad-button"
+                            Variant="Variant.Filled"
+                            Color="Color.Primary"
+                            DisableElevation="true"
+                            Size="Size.Large"
+                            Label="@value.ToString()"
+                            Disabled="@IsKeypadDisabled"
+                            OnClick="@(() => NumpadButtonPressed(value))" />
+                    }
+                </div>
             }
-            </div>
         }
-
-        <div class="d-flex justify-center">
-            <MudTooltip Text="Clear Cell Contents">
-                <MudFabExt
-                    @onmousedown:preventDefault=true
-                    Class="ma-1 px-2 rounded numpad-button"
-                    Color="Color.Error"
-                    DisableElevation="true"
-                    Icon="@Icons.Material.Backspace"
-                    Size="Size.Large"
-                    IconSize="Size.Large"
-                    Disabled="@IsKeypadDisabled"
-                    OnClick="@(() => NumpadButtonPressed(0))" />
-            </MudTooltip>
-        </div>
-    }
-    else
-    {
-        <div @ref="colorScroll" style="max-height: calc(12rem + 32px); overflow-y: scroll;">
-            @for (int colorIndexIter = 0; colorIndexIter < colors.Count; colorIndexIter += 3)
+        else
+        {
+            for (int colorIndexIter = 0; colorIndexIter < colors.Count; colorIndexIter += 3)
             {
                 int colorIndex = colorIndexIter;
                 <div class="d-flex justify-center">
@@ -126,9 +111,35 @@
                     }
                 </div>
             }
-        </div>
+        }
+    </div>
 
+    @if (currentMarkMode != MarkMode.Color)
+    {
         <div class="d-flex justify-center">
+            <MudTooltip Text="Clear Cell Contents">
+                <MudFabExt
+                    @onmousedown:preventDefault=true
+                    Class="ma-1 px-2 rounded numpad-button"
+                    Color="Color.Error"
+                    DisableElevation="true"
+                    Icon="@Icons.Material.Backspace"
+                    Size="Size.Large"
+                    IconSize="Size.Large"
+                    Disabled="@IsKeypadDisabled"
+                    OnClick="@(() => NumpadButtonPressed(0))" />
+            </MudTooltip>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-min">
+            <MudTooltip Text="Add a custom color">
+                <div class="mud-button-root mud-fab mud-ripple mud-fab-disable-elevation ma-1 px-2 rounded numpad-button">
+                    <input type="color" class="custom-color-picker" @bind="PickedColor" />
+                    <MudIcon class="custom-color-icon" Icon="@Icons.Material.ControlPoint" />
+                </div>
+            </MudTooltip>
             <MudTooltip Text="Clear Coloring">
                 <MudFabExt
                     @onmousedown:preventDefault=true
@@ -140,20 +151,6 @@
                     IconSize="Size.Large"
                     Disabled="@IsKeypadDisabled"
                     OnClick="@(() => NumpadButtonPressed(0))" />
-            </MudTooltip>
-            <MudTooltip Text="Choose Custom Color">
-                <input class="mud-button-root mud-fab mud-ripple mud-fab-disable-elevation ma-1 px-2 rounded numpad-button" type="color" @bind="PickedColor" />
-            </MudTooltip>
-            <MudTooltip Text="Add chosen color">
-                <MudFabExt
-                    @onmousedown:preventDefault=true
-                    Class="ma-1 px-2 rounded numpad-button"
-                    Style="@PickedColorStyle"
-                    DisableElevation="true"
-                    Icon="@Icons.Material.LibraryAdd"
-                    Size="Size.Large"
-                    IconSize="Size.Large"
-                    OnClick="AddCustomColor" />
             </MudTooltip>
         </div>
     }
