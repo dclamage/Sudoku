@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SudokuBlazor.Solver.Constraints;
 
 namespace SudokuBlazor.Solver
 {
@@ -32,7 +33,7 @@ namespace SudokuBlazor.Solver
             }
         }
 
-        public void LogicalStep(uint[] board)
+        public void LogicalStep(uint[] board, string[] constraints)
         {
             if (board.Length != SolverUtility.NUM_CELLS)
             {
@@ -40,7 +41,7 @@ namespace SudokuBlazor.Solver
                 return;
             }
 
-            SudokuSolver solver = CreateSolver(board);
+            SudokuSolver solver = CreateSolver(board, constraints);
             if (solver == null)
             {
                 LogicalStepCompleted?.Invoke(this, ("Invalid board.", null));
@@ -50,7 +51,7 @@ namespace SudokuBlazor.Solver
             solver.LogicalStep(LogicalStepCompleted);
         }
 
-        public void LogicalSolve(uint[] board)
+        public void LogicalSolve(uint[] board, string[] constraints)
         {
             if (board.Length != SolverUtility.NUM_CELLS)
             {
@@ -58,7 +59,7 @@ namespace SudokuBlazor.Solver
                 return;
             }
 
-            SudokuSolver solver = CreateSolver(board);
+            SudokuSolver solver = CreateSolver(board, constraints);
             if (solver == null)
             {
                 LogicalSolveCompleted?.Invoke(this, ("Invalid board.", null));
@@ -81,7 +82,7 @@ namespace SudokuBlazor.Solver
             }, cancellationToken.Token);
         }
 
-        public void Solve(uint[] board, bool random)
+        public void Solve(uint[] board, string[] constraints, bool random)
         {
             if (board.Length != SolverUtility.NUM_CELLS)
             {
@@ -89,7 +90,7 @@ namespace SudokuBlazor.Solver
                 return;
             }
 
-            SudokuSolver solver = CreateSolver(board);
+            SudokuSolver solver = CreateSolver(board, constraints);
             if (solver == null)
             {
                 SolveResultEvent?.Invoke(this, null);
@@ -138,7 +139,7 @@ namespace SudokuBlazor.Solver
             }, cancellationToken.Token);
         }
 
-        public void CountSolutions(uint[] board, ulong maxSolutions)
+        public void CountSolutions(uint[] board, string[] constraints, ulong maxSolutions)
         {
             if (board.Length != SolverUtility.NUM_CELLS)
             {
@@ -146,7 +147,7 @@ namespace SudokuBlazor.Solver
                 return;
             }
 
-            SudokuSolver solver = CreateSolver(board);
+            SudokuSolver solver = CreateSolver(board, constraints);
             if (solver == null)
             {
                 SolutionCountCompleteEvent?.Invoke(this, 0);
@@ -160,7 +161,7 @@ namespace SudokuBlazor.Solver
             }, cancellationToken.Token);
         }
 
-        public void FindRealCandidates(int[] board)
+        public void FindRealCandidates(int[] board, string[] constraints)
         {
             if (board.Length != SolverUtility.NUM_CELLS)
             {
@@ -168,7 +169,7 @@ namespace SudokuBlazor.Solver
                 return;
             }
 
-            SudokuSolver solver = CreateSolver(board);
+            SudokuSolver solver = CreateSolver(board, constraints);
             if (solver == null)
             {
                 CandidatesSolutionEvent?.Invoke(this, null);
@@ -191,9 +192,15 @@ namespace SudokuBlazor.Solver
             }, cancellationToken.Token);
         }
 
-        public static SudokuSolver CreateSolver(int[] board)
+        public static SudokuSolver CreateSolver(int[] board, string[] constraints)
         {
             SudokuSolver solver = new SudokuSolver();
+            foreach (string constraintStr in constraints)
+            {
+                solver.AddConstraint(ConstraintFactory.Deserialize(constraintStr));
+            }
+            solver.FinalizeConstraints();
+
             for (int i = 0; i < H; i++)
             {
                 for (int j = 0; j < W; j++)
@@ -212,9 +219,14 @@ namespace SudokuBlazor.Solver
             return solver;
         }
 
-        public static SudokuSolver CreateSolver(uint[] board)
+        public static SudokuSolver CreateSolver(uint[] board, string[] constraints)
         {
             SudokuSolver solver = new SudokuSolver();
+            foreach (string constraintStr in constraints)
+            {
+                solver.AddConstraint(ConstraintFactory.Deserialize(constraintStr));
+            }
+            solver.FinalizeConstraints();
 
             // Start by setting the filled values
             for (int i = 0; i < H; i++)

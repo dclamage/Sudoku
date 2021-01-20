@@ -513,19 +513,8 @@ namespace SudokuBlazor.Solver
                     }
 
                     // Try a possible value for this cell
-                    int val = 0;
-                    uint valMask = 0;
-                    for (int curVal = 1; curVal <= MAX_VALUE; curVal++)
-                    {
-                        val = curVal;
-                        valMask = 1u << (curVal - 1);
-
-                        // Don't bother trying the value if it's not a possibility
-                        if ((board[i, j] & valMask) != 0)
-                        {
-                            break;
-                        }
-                    }
+                    int val = MinValue(board[i, j]);
+                    uint valMask = ValueMask(val);
 
                     // Create a backup board in case it needs to be restored
                     SudokuSolver backupBoard = Clone();

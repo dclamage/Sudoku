@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json.Linq;
 using static SudokuBlazor.Solver.SolverUtility;
 
 namespace SudokuBlazor.Solver.Constraints
@@ -49,6 +50,26 @@ namespace SudokuBlazor.Solver.Constraints
             }
         }
 
+        public LittleKillerConstraint(JObject jobject)
+        {
+            int version = (int)jobject["v"];
+            if (version == 1)
+            {
+                cellStart = CellValue((string)jobject["cellStart"]);
+                direction = (Direction)(int)jobject["direction"];
+                sum = (int)jobject["sum"];
+            }
+        }
+
+        public override string Serialized => new JObject()
+        {
+            ["type"] = "LittleKiller",
+            ["v"] = 1,
+            ["cellStart"] = CellName(cellStart),
+            ["direction"] = (int)direction,
+            ["sum"] = sum,
+        }.ToString();
+
         public override string Name => "Little Killer";
 
         public override string SpecificName => $"Little Killer at {CellName(cellStart)}";
@@ -56,6 +77,25 @@ namespace SudokuBlazor.Solver.Constraints
         public override string Icon => "";
 
         public override string Rules => "Numbers outside the grid indicate the sum of all digits along the indicated diagonal.";
+
+        public override bool MarkConflicts(int[] values, bool[] conflicts)
+        {
+            if (cells.Any(cell => values[FlatIndex(cell)] == 0))
+            {
+                return false;
+            }
+
+            int cellSum = cells.Sum(cell => values[FlatIndex(cell)]);
+            if (cellSum != sum)
+            {
+                foreach (var cell in cells)
+                {
+                    conflicts[FlatIndex(cell)] = true;
+                }
+                return true;
+            }
+            return false;
+        }
 
         public override LogicResult InitCandidates(SudokuSolver sudokuSolver)
         {

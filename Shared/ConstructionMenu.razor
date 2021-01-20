@@ -1,3 +1,22 @@
-﻿<div class="d-flex align-center pa-2 mx-2">
+﻿<div class="d-flex flex-column justify-min pa-2 mx-2">
+    <div class="d-flex">
         <MudSwitch @bind-Checked="@EditingEnabled" Label="Enable Editing" Color="Color.Primary" />
+    </div>
+
+    <div class="d-flex">
+        <MudDivider DividerType="DividerType.Middle" Class="my-3"/>
+    </div>
+
+    <div class="d-flex">
+        <MudSwitch @bind-Checked="@KingEnabled" Label="Anti-King" Disabled="!EditingEnabled" Color="Color.Primary" />
+    </div>
+    <div class="d-flex">
+        <MudSwitch @bind-Checked="@KnightEnabled" Label="Anti-Knight" Disabled="!EditingEnabled" Color="Color.Primary" />
+    </div>
+    <div class="d-flex">
+        <MudSwitch @bind-Checked="@NonconsecutiveEnabled" Label="Nonconsecutive" Disabled="!EditingEnabled" Color="Color.Primary" />
+    </div>
+    <div class="d-flex">
+        <MudSwitch @bind-Checked="@DiagNonconsecutiveEnabled" Label="Diagonal Nonconsecutive" Disabled="!EditingEnabled" Color="Color.Primary" />
+    </div>
 </div>

@@ -3,17 +3,80 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using static SudokuBlazor.Solver.SolverUtility;
 
 namespace SudokuBlazor.Solver.Constraints
 {
     public class DiagonalNonconsecutiveConstraint : Constraint
     {
+        public DiagonalNonconsecutiveConstraint() { }
+
+        public DiagonalNonconsecutiveConstraint(JObject _) { }
+
+        public override string Serialized => new JObject()
+        {
+            ["type"] = "DiagonalNonconsecutive",
+            ["v"] = 1,
+        }.ToString();
+
         public override string Name => "Diagonal Nonconsecutive";
 
         public override string Icon => "";
 
         public override string Rules => "Diagonally adjacent cells cannot have consecutive digits.";
+
+        public override bool MarkConflicts(int[] values, bool[] conflicts)
+        {
+            bool conflict = false;
+            for (int i = 0; i < 9; i++)
+            {
+                for (int j = 0; j < 9; j++)
+                {
+                    int cellIndex = i * 9 + j;
+                    if (conflicts[cellIndex])
+                    {
+                        continue;
+                    }
+
+                    int val = values[cellIndex];
+                    if (val == 0)
+                    {
+                        continue;
+                    }
+
+                    if (val > 1)
+                    {
+                        int adjVal = val - 1;
+                        foreach (var pair in DiagonalCells(i, j))
+                        {
+                            int adjCellIndex = FlatIndex(pair);
+                            if (values[adjCellIndex] == adjVal)
+                            {
+                                conflicts[cellIndex] = true;
+                                conflicts[adjCellIndex] = true;
+                                conflict = true;
+                            }
+                        }
+                    }
+                    if (val < MAX_VALUE)
+                    {
+                        int adjVal = val + 1;
+                        foreach (var pair in DiagonalCells(i, j))
+                        {
+                            int adjCellIndex = FlatIndex(pair);
+                            if (values[adjCellIndex] == adjVal)
+                            {
+                                conflicts[cellIndex] = true;
+                                conflicts[adjCellIndex] = true;
+                                conflict = true;
+                            }
+                        }
+                    }
+                }
+            }
+            return conflict;
+        }
 
         public override bool EnforceConstraint(SudokuSolver sudokuSolver, int i, int j, int val)
         {

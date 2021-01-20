@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using SudokuBlazor.Models;
 using SudokuBlazor.Solver;
+using SudokuBlazor.Solver.Constraints;
 
 namespace SudokuBlazor.Shared
 {
@@ -32,6 +33,8 @@ namespace SudokuBlazor.Shared
         private readonly int[] cellValues = new int[81];
         private readonly uint[] cellCenterMarks = new uint[81];
         private readonly uint[] cellCornerMarks = new uint[81];
+        private readonly Dictionary<int, Constraint> constraints = new();
+        public string[] ConstraintStrings => constraints.Values.Select(c => c.Serialized).ToArray();
 
         // Tables
         private readonly (double, double)[] cornerMarkOffsets = new (double, double)[9];
@@ -495,6 +498,7 @@ namespace SudokuBlazor.Shared
             {
                 cellText.Remove((cellIndex, 0, 0));
                 cellValues[cellIndex] = 0;
+                cellIsGiven[cellIndex] = false;
                 SetDirty();
                 CheckConflicts();
                 ReRenderCenterMarks(cellIndex);
@@ -668,6 +672,11 @@ namespace SudokuBlazor.Shared
                 }
             }
 
+            foreach (var constraint in constraints.Values)
+            {
+                constraint.MarkConflicts(cellValues, cellIsConflicted);
+            }
+
             for (int i = 0; i < 81; i++)
             {
                 if (cellValues[i] != 0)
@@ -686,6 +695,18 @@ namespace SudokuBlazor.Shared
                 cellText[(cellIndex, 0, 0)] = CreateFilledText(cellIndex, cellValues[cellIndex], desiredColor);
                 SetDirty();
             }
+        }
+
+        public void AddConstraint(int id, Constraint constraint)
+        {
+            constraints[id] = constraint;
+            CheckConflicts();
+        }
+
+        public void RemoveConstraint(int id)
+        {
+            constraints.Remove(id);
+            CheckConflicts();
         }
     }
 }

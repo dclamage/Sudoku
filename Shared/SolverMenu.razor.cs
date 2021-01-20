@@ -154,12 +154,13 @@ namespace SudokuBlazor.Shared
                 needSnapshot |= Board.Values.ResetToGivens();
             }
             uint[] cellValues = Board.Values.GetCellCandidates(RespectFilledMarks, RespectCenterMarks);
+            string[] constraints = Board.Values.ConstraintStrings;
             RespectFilledMarks = true;
             RespectCenterMarks = true;
 
             await initSolverWorkersTask;
             await solverService.RunAsync(s => s.PrepSolve());
-            await solverService.RunAsync(s => s.LogicalStep(cellValues));
+            await solverService.RunAsync(s => s.LogicalStep(cellValues, constraints));
             await ShowDelayedSpinner();
         }
 
@@ -195,10 +196,11 @@ namespace SudokuBlazor.Shared
                 needSnapshot |= Board.Values.ResetToGivens();
             }
             uint[] cellValues = Board.Values.GetCellCandidates(RespectFilledMarks, RespectCenterMarks);
+            string[] constraints = Board.Values.ConstraintStrings;
 
             await initSolverWorkersTask;
             await solverService.RunAsync(s => s.PrepSolve());
-            await solverService.RunAsync(s => s.LogicalSolve(cellValues));
+            await solverService.RunAsync(s => s.LogicalSolve(cellValues, constraints));
             await ShowDelayedSpinner();
         }
 
@@ -249,10 +251,11 @@ namespace SudokuBlazor.Shared
                 needSnapshot |= Board.Values.ResetToGivens();
             }
             uint[] cellValues = Board.Values.GetCellCandidates(RespectFilledMarks, RespectCenterMarks);
+            string[] constraints = Board.Values.ConstraintStrings;
 
             await initSolverWorkersTask;
             await solverService.RunAsync(s => s.PrepSolve());
-            await solverService.RunAsync(s => s.Solve(cellValues, random));
+            await solverService.RunAsync(s => s.Solve(cellValues, constraints, random));
             await ShowDelayedSpinner();
         }
 
@@ -290,10 +293,11 @@ namespace SudokuBlazor.Shared
             ReceiveSolutionCountProgress(null, 0);
 
             uint[] cellValues = Board.Values.GetCellCandidates(RespectFilledMarks, RespectCenterMarks);
+            string[] constraints = Board.Values.ConstraintStrings;
 
             await initSolverWorkersTask;
             await solverService.RunAsync(s => s.PrepSolve());
-            await solverService.RunAsync(s => s.CountSolutions(cellValues, 0));
+            await solverService.RunAsync(s => s.CountSolutions(cellValues, constraints, 0));
             await ShowDelayedSpinner();
         }
 
@@ -329,20 +333,8 @@ namespace SudokuBlazor.Shared
                 resetBoard = Board.Values.ResetToGivens();
             }
             int[] board = Board.Values.GetCellValues(RespectFilledMarks);
-
-            SudokuSolver solver = new SudokuSolver();
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    int cellIndex = i * 9 + j;
-                    int curValue = board[cellIndex];
-                    if (curValue >= 1 && curValue <= 9)
-                    {
-                        solver.SetValue(i, j, curValue);
-                    }
-                }
-            }
+            string[] constraints = Board.Values.ConstraintStrings;
+            SudokuSolver solver = SudokuSolveService.CreateSolver(board, constraints);
             if (Board.Values.SetAllCenterPencilMarks(solver.FlatBoard, SudokuValues.SingleValueBehavior.RespectValueSetBit) || resetBoard)
             {
                 Board.StoreSnapshot();
@@ -363,10 +355,11 @@ namespace SudokuBlazor.Shared
                 needSnapshot |= Board.Values.ResetToGivens();
             }
             int[] cellValues = Board.Values.GetCellValues(RespectFilledMarks);
+            string[] constraints = Board.Values.ConstraintStrings;
 
             await initSolverWorkersTask;
             await solverService.RunAsync(s => s.PrepSolve());
-            await solverService.RunAsync(s => s.FindRealCandidates(cellValues));
+            await solverService.RunAsync(s => s.FindRealCandidates(cellValues, constraints));
             await ShowDelayedSpinner();
         }
 

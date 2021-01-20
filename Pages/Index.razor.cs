@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using SudokuBlazor.Shared;
+using SudokuBlazor.Solver.Constraints;
 
 namespace SudokuBlazor.Pages
 {
@@ -78,6 +79,34 @@ namespace SudokuBlazor.Pages
         void EditingToggled(bool enabled)
         {
             sudokuBoard.EditingEnabled = enabled;
+        }
+
+        void GlobalConstraintToggled(GlobalConstraints constraint, bool enabled)
+        {
+            if (enabled)
+            {
+                Constraint newConstraint = null;
+                switch (constraint)
+                {
+                    case GlobalConstraints.King:
+                        newConstraint = new KingConstraint();
+                        break;
+                    case GlobalConstraints.Knight:
+                        newConstraint = new KnightConstraint();
+                        break;
+                    case GlobalConstraints.Nonconsecutive:
+                        newConstraint = new NonconsecutiveConstraint();
+                        break;
+                    case GlobalConstraints.DiagNonconsecutive:
+                        newConstraint = new DiagonalNonconsecutiveConstraint();
+                        break;
+                }
+                sudokuBoard.Values.AddConstraint(-(int)constraint, newConstraint);
+            }
+            else
+            {
+                sudokuBoard.Values.RemoveConstraint(-(int)constraint);
+            }
         }
     }
 }

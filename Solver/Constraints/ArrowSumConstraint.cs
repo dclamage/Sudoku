@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json.Linq;
 using static SudokuBlazor.Solver.SolverUtility;
 
 namespace SudokuBlazor.Solver.Constraints
@@ -19,6 +20,27 @@ namespace SudokuBlazor.Solver.Constraints
             allCells = new(this.circleCells.Concat(this.arrowCells));
         }
 
+        public ArrowSumConstraint(JObject jobject)
+        {
+            int version = (int)jobject["v"];
+            if (version != 1)
+            {
+                return;
+            }
+
+            circleCells = new(DeserializeCells(jobject["circles"]));
+            arrowCells = new(DeserializeCells(jobject["arrows"]));
+            allCells = new(circleCells.Concat(arrowCells));
+        }
+
+        public override string Serialized => new JObject()
+        {
+            ["type"] = "ArrowSum",
+            ["v"] = 1,
+            ["circles"] = SerializeCells(circleCells),
+            ["arrows"] = SerializeCells(arrowCells),
+        }.ToString();
+
         public override string Name => "Arrow Sum";
 
         public override string SpecificName => $"Arrow Sum at {circleCells[0]}";
@@ -26,6 +48,32 @@ namespace SudokuBlazor.Solver.Constraints
         public override string Icon => "";
 
         public override string Rules => "Digits along an arrow sum to the value in the circle or pill. Pill values are read as a single number from left to right or top to bottom.";
+
+        public override bool MarkConflicts(int[] values, bool[] conflicts)
+        {
+            if (allCells.Any(cell => values[FlatIndex(cell)] == 0))
+            {
+                return false;
+            }
+
+            int circleSum = 0;
+            foreach (var cell in circleCells)
+            {
+                circleSum *= 10;
+                circleSum += values[FlatIndex(cell)];
+            }
+
+            int arrowSum = arrowCells.Sum(cell => values[FlatIndex(cell)]);
+            if (arrowSum != circleSum)
+            {
+                foreach (var cell in allCells)
+                {
+                    conflicts[FlatIndex(cell)] = true;
+                }
+                return true;
+            }
+            return false;
+        }
 
         public override LogicResult InitCandidates(SudokuSolver sudokuSolver)
         {

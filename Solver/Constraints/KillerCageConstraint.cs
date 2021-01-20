@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json.Linq;
 using SudokuBlazor.Shared;
 using static SudokuBlazor.Solver.SolverUtility;
 
@@ -11,14 +12,66 @@ namespace SudokuBlazor.Solver.Constraints
     {
         private readonly List<(int, int)> cells;
         private readonly int sum;
-        private readonly List<List<int>> sumCombinations;
-        private readonly HashSet<int> possibleValues;
+        private List<List<int>> sumCombinations = null;
+        private HashSet<int> possibleValues = null;
 
         public KillerCageConstraint(List<(int, int)> cells, int sum)
         {
             this.cells = cells;
             this.sum = sum;
+            InitCombinations();
+        }
 
+        public KillerCageConstraint(JObject jobject)
+        {
+            int version = (int)jobject["v"];
+            if (version != 1)
+            {
+                return;
+            }
+
+            cells = new(DeserializeCells(jobject["cells"]));
+            sum = (int)jobject["sum"];
+            InitCombinations();
+        }
+
+        public override string Serialized => new JObject()
+        {
+            ["type"] = "KillerCage",
+            ["v"] = 1,
+            ["cells"] = SerializeCells(cells),
+            ["sum"] = sum,
+        }.ToString();
+
+        public override string Name => "Killer Cage";
+
+        public override string SpecificName => $"Killer Cage at {cells[0]}";
+
+        public override string Icon => "";
+
+        public override string Rules => "Digits in a cage must sum to the number at the top left of the cage. Digits may not repeat in a cage.";
+
+        public override bool MarkConflicts(int[] values, bool[] conflicts)
+        {
+            if (cells.Any(cell => values[FlatIndex(cell)] == 0))
+            {
+                return false;
+            }
+
+            int cellSum = cells.Sum(cell => values[FlatIndex(cell)]);
+            if (cellSum != sum)
+            {
+                foreach (var cell in cells)
+                {
+                    conflicts[FlatIndex(cell)] = true;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        private void InitCombinations()
+        {
             const int allValueSum = (MAX_VALUE * (MAX_VALUE + 1)) / 2;
             if (sum > 0 && sum < allValueSum)
             {
@@ -38,14 +91,6 @@ namespace SudokuBlazor.Solver.Constraints
                 }
             }
         }
-
-        public override string Name => "Killer Cage";
-
-        public override string SpecificName => $"Killer Cage at {cells[0]}";
-
-        public override string Icon => "";
-
-        public override string Rules => "Digits in a cage must sum to the number at the top left of the cage. Digits may not repeat in a cage.";
 
         public override LogicResult InitCandidates(SudokuSolver sudokuSolver)
         {

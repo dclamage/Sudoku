@@ -1,10 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace SudokuBlazor.Solver.Constraints
 {
     public abstract class Constraint
     {
+        /// <summary>
+        /// Returns a serialized version of this constraint so it can be reconstructed later.
+        /// </summary>
+        public abstract string Serialized { get; }
+
         /// <summary>
         /// The generic name of this constraint to present to the end-user.
         /// </summary>
@@ -24,6 +30,15 @@ namespace SudokuBlazor.Solver.Constraints
         /// Human-readable rules (in English) describing this constraint, which is presented to the end-user.
         /// </summary>
         public abstract string Rules { get; }
+
+        /// <summary>
+        /// Go through the values that aren't currently marked as conflicts, and check if the value conflicts
+        /// based on this constraint.
+        /// </summary>
+        /// <param name="values">The current filled values on the board. 0 is unfilled.</param>
+        /// <param name="conflicts">in/out conflicted cells.</param>
+        /// <returns>True if any conflicts added. False otherwise.</returns>
+        public abstract bool MarkConflicts(int[] values, bool[] conflicts);
 
         /// <summary>
         /// Called once all constraints are finalized on the board.
@@ -91,5 +106,23 @@ namespace SudokuBlazor.Solver.Constraints
         /// The list contents are expected to remain the same over the lifetime of the object.
         /// </summary>
         public virtual List<(int, int)> Group => null;
+
+        protected static JArray SerializeCells(IEnumerable<(int, int)> cells)
+        {
+            JArray jarray = new();
+            foreach (var cell in cells)
+            {
+                jarray.Add(SolverUtility.CellName(cell));
+            }
+            return jarray;
+        }
+
+        protected IEnumerable<(int, int)> DeserializeCells(JToken cells)
+        {
+            foreach (var cell in cells)
+            {
+                yield return SolverUtility.CellValue((string)cell);
+            }
+        }
     }
 }

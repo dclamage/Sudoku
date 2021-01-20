@@ -196,6 +196,8 @@ namespace SudokuBlazor.Solver
         public static bool IsDiagonal(int i0, int j0, int i1, int j1) => (i0 == i1 - 1 || i0 == i1 + 1) && (j0 == j1 - 1 || j0 == j1 + 1);
         public static string CellName((int, int) cell) => $"r{cell.Item1 + 1}c{cell.Item2 + 1}";
         public static string CellName(int i, int j) => CellName((i, j));
+        public static (int, int) CellValue(string cellName) => cellName.Length == 4 ? (cellName[1] - '1', cellName[3] - '1') : (-1, -1);
+        public static int FlatIndex((int, int) cell) => cell.Item1 * 9 + cell.Item2;
 
 
         public static readonly int[][][] combinations = new int[MAX_VALUE][][];
