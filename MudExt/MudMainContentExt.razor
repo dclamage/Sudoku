@@ -1,0 +1,23 @@
+﻿@namespace MudBlazor
+@using MudBlazor.Utilities
+@inherits MudComponentBase
+
+<div @attributes="UserAttributes" class="@Classname" style="@Style">
+    @ChildContent
+</div>
+
+@code {
+
+    protected string Classname =>
+    new CssBuilder("mud-main-content")
+        .AddClass($"mud-main-drawer-open", Layout?.IsDrawerOpen(Anchor.Left) == true || Layout?.IsDrawerOpen(Anchor.Right) == true)
+        .AddClass($"mud-main-drawer-closed", !Layout?.IsDrawerOpen(Anchor.Left) == true || !Layout?.IsDrawerOpen(Anchor.Right) == true)
+        .AddClass($"mud-main-drawer-clipped", Layout?.IsDrawerClipped(Anchor.Left) == true || Layout?.IsDrawerClipped(Anchor.Right) == true)
+        .AddClass(Class)
+     .Build();
+
+    [Parameter] public RenderFragment ChildContent { get; set; }
+
+    [CascadingParameter] MudLayoutExt Layout { get; set; }
+
+}

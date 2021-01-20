@@ -1,0 +1,13 @@
+﻿@namespace MudBlazor
+@using MudBlazor.Utilities
+@using MudBlazor.Extensions
+@using MudBlazor.Services
+@inherits MudComponentBase
+@implements IDisposable
+@inject IBrowserWindowSizeProvider BrowserWindowSizeProvider
+
+<aside @attributes="UserAttributes" class="@Classname" style="@Style">
+    <CascadingValue Value="this" IsFixed="true">
+        @ChildContent
+    </CascadingValue>
+</aside>
