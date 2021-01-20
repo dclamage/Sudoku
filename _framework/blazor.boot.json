@@ -7,7 +7,7 @@
   "linkerEnabled": false,
   "resources": {
     "assembly": {
-      "SudokuBlazor.dll": "sha256-lPXCRzRDo3+gXGzYIna33CQ7F+jN22nuKgJrktfqDVQ=",
+      "SudokuBlazor.dll": "sha256-TnNZMhXfHNtlzAYLBTAT2gLXz60jV4FaFrqnYtbQZRk=",
       "Microsoft.CSharp.dll": "sha256-JWW\/4VOX8B0ELTP\/v4O7wlgWY8ZyVIv0BTIRIv2TJBw=",
       "Microsoft.VisualBasic.Core.dll": "sha256-\/9kBfwlTqN2R\/tiMVV76A72VsrUfSVAYs2v\/5mi38Mk=",
       "Microsoft.VisualBasic.dll": "sha256-WrQGoCtjVGnegfi0WxOTvOc0kZXDcuJ\/tg3XRe6YPlw=",
@@ -195,7 +195,7 @@
       "Microsoft.Extensions.Primitives.dll": "sha256-f2PgoftqEkKRuuiAk6S1MHygOuqZBHzB0HOB3vR93TU=",
       "Microsoft.JSInterop.dll": "sha256-0z9AfkaU8R6arbMtgfuQVTZqxRWIpXhuk1KDZ3x1Sw0=",
       "Microsoft.JSInterop.WebAssembly.dll": "sha256-oGU2Q8qBkET6YR1Y8F4W1IfJ8TOShwQ7Bv64dUnydZM=",
-      "MudBlazor.dll": "sha256-B5D1BTGEumWMmR1JekBgLLfTB0DCMbdjwXOy+C8f+ro=",
+      "MudBlazor.dll": "sha256-LojGXi5t3BdDezjZ5JjOnUdQ\/urh3facR6sjBLZKjok=",
       "Newtonsoft.Json.dll": "sha256-mRd6TL4DYldo1ko9czkjEDcoiPdMPrJxz3dekwV6OOY=",
       "Serialize.Linq.dll": "sha256-xGhk6SsVvfETdCgFxzFwUZUJvNoUs9qja8r5Ezul6h0=",
       "System.IO.Pipelines.dll": "sha256-3ET+mpR7F058YRj9YaLHOVXBqOW6iUxtIpeiKPYw4PA=",
