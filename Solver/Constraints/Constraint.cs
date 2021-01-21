@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using static SudokuBlazor.Solver.SolverUtility;
 
 namespace SudokuBlazor.Solver.Constraints
 {
@@ -39,6 +41,15 @@ namespace SudokuBlazor.Solver.Constraints
         /// <param name="conflicts">in/out conflicted cells.</param>
         /// <returns>True if any conflicts added. False otherwise.</returns>
         public abstract bool MarkConflicts(int[] values, bool[] conflicts);
+
+        /// <summary>
+        /// Return an enumerable of cells which cannot be the same digit as this cell.
+        /// Only need to return cells which wouldn't be seen by normal sudoku rules.
+        /// Also no need to return any cells if the Group property is used.
+        /// </summary>
+        /// <param name="cell">The cell which is seeing other cells.</param>
+        /// <returns>All cells which are seen by this cell.</returns>
+        public virtual IEnumerable<(int, int)> SeenCells((int, int) cell) => Enumerable.Empty<(int, int)>();
 
         /// <summary>
         /// Called once all constraints are finalized on the board.
@@ -123,6 +134,64 @@ namespace SudokuBlazor.Solver.Constraints
             {
                 yield return SolverUtility.CellValue((string)cell);
             }
+        }
+
+        /// <summary>
+        /// Useful for constraints that just need to mark conflicts based on the seen cells.
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="conflicts"></param>
+        /// <returns></returns>
+        protected bool MarkConflictsBasedOnSeenCells(int[] values, bool[] conflicts)
+        {
+            bool conflict = false;
+            for (int i = 0; i < 9; i++)
+            {
+                for (int j = 0; j < 9; j++)
+                {
+                    int cellIndex = FlatIndex((i, j));
+                    int val = values[cellIndex];
+                    if (val == 0)
+                    {
+                        continue;
+                    }
+
+                    foreach (var seenCell in SeenCells((i, j)))
+                    {
+                        int curCellIndex = FlatIndex(seenCell);
+                        if (values[curCellIndex] == val)
+                        {
+                            if (!conflicts[cellIndex] || !conflicts[curCellIndex])
+                            {
+                                conflicts[cellIndex] = true;
+                                conflicts[curCellIndex] = true;
+                                conflict = true;
+                            }
+                        }
+                    }
+                }
+            }
+            return conflict;
+        }
+
+        /// <summary>
+        /// Useful for constraints that just need to enforce seen cells.
+        /// </summary>
+        /// <param name="sudokuSolver"></param>
+        /// <param name="i"></param>
+        /// <param name="j"></param>
+        /// <param name="val"></param>
+        /// <returns></returns>
+        protected bool EnforceConstraintBasedOnSeenCells(SudokuSolver sudokuSolver, int i, int j, int val)
+        {
+            foreach (var cell in SeenCells((i, j)))
+            {
+                if (!sudokuSolver.ClearValue(cell.Item1, cell.Item2, val))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

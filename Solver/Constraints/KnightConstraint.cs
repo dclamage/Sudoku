@@ -26,168 +26,45 @@ namespace SudokuBlazor.Solver.Constraints
 
         public override string Rules => "Cells which are a chess knight's move apart cannot contain the same digit.";
 
-        public override bool MarkConflicts(int[] values, bool[] conflicts)
-        {
-            bool conflict = false;
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    int cellIndex = FlatIndex((i, j));
-                    if (conflicts[cellIndex])
-                    {
-                        continue;
-                    }
-                    int val = values[cellIndex];
-                    if (val == 0)
-                    {
-                        continue;
-                    }
+        public override bool MarkConflicts(int[] values, bool[] conflicts) => MarkConflictsBasedOnSeenCells(values, conflicts);
 
-                    if (i - 2 >= 0 && j - 1 >= 0)
-                    {
-                        int otherCellIndex = FlatIndex((i - 2, j - 1));
-                        if (val == values[otherCellIndex])
-                        {
-                            conflicts[cellIndex] = true;
-                            conflicts[otherCellIndex] = true;
-                            conflict = true;
-                        }
-                    }
-                    if (i - 2 >= 0 && j + 1 < WIDTH)
-                    {
-                        int otherCellIndex = FlatIndex((i - 2, j + 1));
-                        if (val == values[otherCellIndex])
-                        {
-                            conflicts[cellIndex] = true;
-                            conflicts[otherCellIndex] = true;
-                            conflict = true;
-                        }
-                    }
-                    if (i - 1 >= 0 && j - 2 >= 0)
-                    {
-                        int otherCellIndex = FlatIndex((i - 1, j - 2));
-                        if (val == values[otherCellIndex])
-                        {
-                            conflicts[cellIndex] = true;
-                            conflicts[otherCellIndex] = true;
-                            conflict = true;
-                        }
-                    }
-                    if (i - 1 >= 0 && j + 2 < WIDTH)
-                    {
-                        int otherCellIndex = FlatIndex((i - 1, j + 2));
-                        if (val == values[otherCellIndex])
-                        {
-                            conflicts[cellIndex] = true;
-                            conflicts[otherCellIndex] = true;
-                            conflict = true;
-                        }
-                    }
-                    if (i + 2 < HEIGHT && j - 1 >= 0)
-                    {
-                        int otherCellIndex = FlatIndex((i + 2, j - 1));
-                        if (val == values[otherCellIndex])
-                        {
-                            conflicts[cellIndex] = true;
-                            conflicts[otherCellIndex] = true;
-                            conflict = true;
-                        }
-                    }
-                    if (i + 2 < HEIGHT && j + 1 < WIDTH)
-                    {
-                        int otherCellIndex = FlatIndex((i + 2, j + 1));
-                        if (val == values[otherCellIndex])
-                        {
-                            conflicts[cellIndex] = true;
-                            conflicts[otherCellIndex] = true;
-                            conflict = true;
-                        }
-                    }
-                    if (i + 1 < HEIGHT && j - 2 >= 0)
-                    {
-                        int otherCellIndex = FlatIndex((i + 1, j - 2));
-                        if (val == values[otherCellIndex])
-                        {
-                            conflicts[cellIndex] = true;
-                            conflicts[otherCellIndex] = true;
-                            conflict = true;
-                        }
-                    }
-                    if (i + 1 < HEIGHT && j + 2 < WIDTH)
-                    {
-                        int otherCellIndex = FlatIndex((i + 1, j + 2));
-                        if (val == values[otherCellIndex])
-                        {
-                            conflicts[cellIndex] = true;
-                            conflicts[otherCellIndex] = true;
-                            conflict = true;
-                        }
-                    }
-                }
-            }
-            return conflict;
-        }
+        public override bool EnforceConstraint(SudokuSolver sudokuSolver, int i, int j, int val) => EnforceConstraintBasedOnSeenCells(sudokuSolver, i, j, val);
 
-        public override bool EnforceConstraint(SudokuSolver sudokuSolver, int i, int j, int val)
+        public override IEnumerable<(int, int)> SeenCells((int, int) cell)
         {
+            var (i, j) = cell;
             if (i - 2 >= 0 && j - 1 >= 0)
             {
-                if (!sudokuSolver.ClearValue(i - 2, j - 1, val))
-                {
-                    return false;
-                }
+                yield return (i - 2, j - 1);
             }
             if (i - 2 >= 0 && j + 1 < WIDTH)
             {
-                if (!sudokuSolver.ClearValue(i - 2, j + 1, val))
-                {
-                    return false;
-                }
+                yield return (i - 2, j + 1);
             }
             if (i - 1 >= 0 && j - 2 >= 0)
             {
-                if (!sudokuSolver.ClearValue(i - 1, j - 2, val))
-                {
-                    return false;
-                }
+                yield return (i - 1, j - 2);
             }
             if (i - 1 >= 0 && j + 2 < WIDTH)
             {
-                if (!sudokuSolver.ClearValue(i - 1, j + 2, val))
-                {
-                    return false;
-                }
+                yield return (i - 1, j + 2);
             }
             if (i + 2 < HEIGHT && j - 1 >= 0)
             {
-                if (!sudokuSolver.ClearValue(i + 2, j - 1, val))
-                {
-                    return false;
-                }
+                yield return (i + 1, j - 1);
             }
             if (i + 2 < HEIGHT && j + 1 < WIDTH)
             {
-                if (!sudokuSolver.ClearValue(i + 2, j + 1, val))
-                {
-                    return false;
-                }
+                yield return (i + 2, j + 1);
             }
             if (i + 1 < HEIGHT && j - 2 >= 0)
             {
-                if (!sudokuSolver.ClearValue(i + 1, j - 2, val))
-                {
-                    return false;
-                }
+                yield return (i + 1, j - 2);
             }
             if (i + 1 < HEIGHT && j + 2 < WIDTH)
             {
-                if (!sudokuSolver.ClearValue(i + 1, j + 2, val))
-                {
-                    return false;
-                }
+                yield return (i + 1, j + 2);
             }
-            return true;
         }
 
         public override LogicResult StepLogic(SudokuSolver sudokuSolver, StringBuilder logicalStepDescription, bool isBruteForcing)

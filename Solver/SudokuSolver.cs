@@ -253,17 +253,15 @@ namespace SudokuBlazor.Solver
                     return new HashSet<(int, int)>();
                 }
 
-                HashSet<(int, int)> curSeen = null;
-                foreach (var group in groupList)
+                HashSet<(int, int)> curSeen = new(groupList.First().Cells);
+                foreach (var group in groupList.Skip(1))
                 {
-                    if (curSeen == null)
-                    {
-                        curSeen = new(group.Cells);
-                    }
-                    else
-                    {
-                        curSeen.UnionWith(group.Cells);
-                    }
+                    curSeen.UnionWith(group.Cells);
+                }
+
+                foreach (var constraint in constraints)
+                {
+                    curSeen.UnionWith(constraint.SeenCells(cell));
                 }
 
                 if (result == null)

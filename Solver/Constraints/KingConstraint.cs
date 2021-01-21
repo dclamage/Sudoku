@@ -26,75 +26,29 @@ namespace SudokuBlazor.Solver.Constraints
 
         public override string Rules => "Cells which are a chess king's move apart cannot contain the same digit.";
 
-        public override bool MarkConflicts(int[] values, bool[] conflicts)
-        {
-            bool conflict = false;
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    int cellIndex = FlatIndex((i, j));
-                    if (conflicts[cellIndex])
-                    {
-                        continue;
-                    }
-                    int val = values[cellIndex];
-                    if (val == 0)
-                    {
-                        continue;
-                    }
+        public override bool MarkConflicts(int[] values, bool[] conflicts) => MarkConflictsBasedOnSeenCells(values, conflicts);
 
-                    for (int offi = -1; offi < 2; offi++)
-                    {
-                        for (int offj = -1; offj < 2; offj++)
-                        {
-                            if (offi == 0 && offj == 0)
-                            {
-                                continue;
-                            }
-                            int curi = i + offi;
-                            int curj = j + offj;
-                            if (curi < 0 || curi > 8 || curj < 0 || curj > 8)
-                            {
-                                continue;
-                            }
-                            int curCellIndex = FlatIndex((curi, curj));
-                            if (values[curCellIndex] == val)
-                            {
-                                conflicts[cellIndex] = true;
-                                conflicts[curCellIndex] = true;
-                                conflict = true;
-                            }
-                        }
-                    }
-                }
-            }
-            return conflict;
-        }
+        public override bool EnforceConstraint(SudokuSolver sudokuSolver, int i, int j, int val) => EnforceConstraintBasedOnSeenCells(sudokuSolver, i, j, val);
 
-        public override bool EnforceConstraint(SudokuSolver sudokuSolver, int i, int j, int val)
+        public override IEnumerable<(int, int)> SeenCells((int, int) cell)
         {
-            for (int offi = -1; offi < 2; offi++)
+            var (i, j) = cell;
+            if (i - 1 >= 0 && j - 1 >= 0)
             {
-                for (int offj = -1; offj < 2; offj++)
-                {
-                    if (offi == 0 && offj == 0)
-                    {
-                        continue;
-                    }
-                    int curi = i + offi;
-                    int curj = j + offj;
-                    if (curi < 0 || curi > 8 || curj < 0 || curj > 8)
-                    {
-                        continue;
-                    }
-                    if (!sudokuSolver.ClearValue(curi, curj, val))
-                    {
-                        return false;
-                    }
-                }
+                yield return (i - 1, j - 1);
             }
-            return true;
+            if (i - 1 >= 0 && j + 1 < WIDTH)
+            {
+                yield return (i - 1, j + 1);
+            }
+            if (i + 1 < HEIGHT && j - 1 >= 0)
+            {
+                yield return (i + 1, j - 1);
+            }
+            if (i + 1 < HEIGHT && j + 1 < WIDTH)
+            {
+                yield return (i + 1, j + 1);
+            }
         }
 
         public override LogicResult StepLogic(SudokuSolver sudokuSolver, StringBuilder logicalStepDescription, bool isBruteForcing)
