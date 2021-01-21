@@ -452,7 +452,7 @@ namespace SudokuBlazor.Solver
             Stopwatch timeSinceCheck = Stopwatch.StartNew();
             while (true)
             {
-                if (timeSinceCheck.ElapsedMilliseconds > 100)
+                if (timeSinceCheck.ElapsedMilliseconds > 1000)
                 {
                     await Task.Delay(1);
                     cancellationToken?.ThrowIfCancellationRequested();
@@ -494,7 +494,7 @@ namespace SudokuBlazor.Solver
             var boardStack = new Stack<SudokuSolver>();
             while (true)
             {
-                if (timeSinceCheck.ElapsedMilliseconds > 100)
+                if (timeSinceCheck.ElapsedMilliseconds > 1000)
                 {
                     await Task.Delay(1);
                     cancellationToken?.ThrowIfCancellationRequested();
@@ -558,7 +558,7 @@ namespace SudokuBlazor.Solver
             var boardStack = new Stack<SudokuSolver>();
             while (true)
             {
-                if (timeSinceCheck.ElapsedMilliseconds > 100)
+                if (timeSinceCheck.ElapsedMilliseconds > 1000)
                 {
                     await Task.Delay(1);
                     cancellationToken?.ThrowIfCancellationRequested();
@@ -716,7 +716,7 @@ namespace SudokuBlazor.Solver
                 }
 
                 // Check for cancel
-                if (state.timeSinceCheck.ElapsedMilliseconds > 100)
+                if (state.timeSinceCheck.ElapsedMilliseconds > 1000)
                 {
                     await Task.Delay(1);
                     state.cancellationToken?.ThrowIfCancellationRequested();
@@ -779,20 +779,11 @@ namespace SudokuBlazor.Solver
             {
                 for (int j = 0; j < WIDTH; j++)
                 {
-                    int cellIndex = i * 9 + j;
-
-                    if (timeSinceCheck.ElapsedMilliseconds > 100)
-                    {
-                        await Task.Delay(1);
-                        cancellationToken?.ThrowIfCancellationRequested();
-
-                        progressEvent?.Invoke(null, (cellIndex, fixedBoard));
-                        timeSinceCheck.Restart();
-                    }
+                    int cellIndex = i * WIDTH + j;
 
                     if (IsValueSet(i, j))
                     {
-                        fixedBoard[i * WIDTH + j] = board[i, j];
+                        fixedBoard[cellIndex] = board[i, j];
                         continue;
                     }
 
@@ -807,14 +798,47 @@ namespace SudokuBlazor.Solver
                         }
 
                         // Don't bother trying this value if it's already confirmed in the fixed board
-                        if ((fixedBoard[i * WIDTH + j] & valMask) != 0)
+                        if ((fixedBoard[cellIndex] & valMask) != 0)
                         {
                             continue;
+                        }
+
+                        // Check for cancellation and send progress updates once per second
+                        if (timeSinceCheck.ElapsedMilliseconds > 1000)
+                        {
+                            await Task.Delay(1);
+                            cancellationToken?.ThrowIfCancellationRequested();
+
+                            progressEvent?.Invoke(null, (cellIndex, fixedBoard));
+                            timeSinceCheck.Restart();
                         }
 
                         // Do the solve on a copy of the board
                         SudokuSolver boardCopy = Clone();
                         boardCopy.isBruteForcing = true;
+
+                        // Go through all previous cells and set only their real candidates as possibilities
+                        for (int fixedCellIndex = 0; fixedCellIndex < cellIndex; fixedCellIndex++)
+                        {
+                            if (ValueCount(fixedBoard[fixedCellIndex]) > 1)
+                            {
+                                int fi = fixedCellIndex / WIDTH;
+                                int fj = fixedCellIndex % WIDTH;
+                                boardCopy.board[fi, fj] = fixedBoard[fixedCellIndex];
+                            }
+                        }
+                        for (int fixedCellIndex = 0; fixedCellIndex < cellIndex; fixedCellIndex++)
+                        {
+                            if (ValueCount(fixedBoard[fixedCellIndex]) == 1)
+                            {
+                                int fi = fixedCellIndex / WIDTH;
+                                int fj = fixedCellIndex % WIDTH;
+                                if (!boardCopy.IsValueSet(fi, fj))
+                                {
+                                    boardCopy.SetValue(fi, fj, GetValue(fixedBoard[fixedCellIndex]));
+                                }
+                            }
+                        }
 
                         // Set the board to use this candidate's value
                         if (boardCopy.SetValue(i, j, val) && await boardCopy.FindSolution(cancellationToken))
@@ -828,6 +852,15 @@ namespace SudokuBlazor.Solver
                                 }
                             }
                         }
+                    }
+
+                    // If a cell has no possible candidates then there are no solutions and thus all candidates are empty.
+                    // This will really only happen on the first cell attempted.
+                    if (fixedBoard[cellIndex] == 0)
+                    {
+                        completionEvent?.Invoke(null, null);
+                        isBruteForcing = wasBruteForcing;
+                        return;
                     }
                 }
             }
