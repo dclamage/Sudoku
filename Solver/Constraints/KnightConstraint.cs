@@ -51,7 +51,7 @@ namespace SudokuBlazor.Solver.Constraints
             }
             if (i + 2 < HEIGHT && j - 1 >= 0)
             {
-                yield return (i + 1, j - 1);
+                yield return (i + 2, j - 1);
             }
             if (i + 2 < HEIGHT && j + 1 < WIDTH)
             {
