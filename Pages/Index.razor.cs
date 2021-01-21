@@ -100,8 +100,24 @@ namespace SudokuBlazor.Pages
                     case GlobalConstraints.DiagNonconsecutive:
                         newConstraint = new DiagonalNonconsecutiveConstraint();
                         break;
+                    case GlobalConstraints.DisjointGroups:
+                        foreach (var curConstraint in DisjointGroupsConstraint.All(9))
+                        {
+                            sudokuBoard.Values.AddConstraint(-(int)constraint - 100 * curConstraint.GroupIndex, curConstraint);
+                        }
+                        break;
                 }
-                sudokuBoard.Values.AddConstraint(-(int)constraint, newConstraint);
+                if (newConstraint != null)
+                {
+                    sudokuBoard.Values.AddConstraint(-(int)constraint, newConstraint);
+                }
+            }
+            else if (constraint == GlobalConstraints.DisjointGroups)
+            {
+                for (int i = 0; i < 9; i++)
+                {
+                    sudokuBoard.Values.RemoveConstraint(-(int)constraint - 100 * i);
+                }
             }
             else
             {

@@ -12,6 +12,7 @@ namespace SudokuBlazor.Shared
         Knight,
         Nonconsecutive,
         DiagNonconsecutive,
+        DisjointGroups,
     }
 
     public partial class ConstructionMenu
@@ -90,5 +91,19 @@ namespace SudokuBlazor.Shared
             }
         }
         private bool _diagNonconsecutiveEnabled = false;
+
+        public bool DisjointGroups
+        {
+            get => _disjointGroups;
+            set
+            {
+                if (_disjointGroups != value)
+                {
+                    _disjointGroups = value;
+                    GlobalConstraintToggled?.Invoke(GlobalConstraints.DisjointGroups, value);
+                }
+            }
+        }
+        private bool _disjointGroups = false;
     }
 }

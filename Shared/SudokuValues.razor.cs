@@ -674,6 +674,32 @@ namespace SudokuBlazor.Shared
 
             foreach (var constraint in constraints.Values)
             {
+                var group = constraint.Group;
+                if (group != null)
+                {
+                    Array.Clear(digitCount, 0, 9);
+                    foreach (var cell in constraint.Group)
+                    {
+                        int cellIndex = SolverUtility.FlatIndex(cell);
+                        int curValue = cellValues[cellIndex];
+                        if (curValue > 0)
+                        {
+                            digitCount[curValue - 1]++;
+                        }
+                    }
+                    foreach (var cell in constraint.Group)
+                    {
+                        int cellIndex = SolverUtility.FlatIndex(cell);
+                        int curValue = cellValues[cellIndex];
+                        if (curValue > 0)
+                        {
+                            if (digitCount[curValue - 1] > 1)
+                            {
+                                cellIsConflicted[cellIndex] = true;
+                            }
+                        }
+                    }
+                }
                 constraint.MarkConflicts(cellValues, cellIsConflicted);
             }
 
