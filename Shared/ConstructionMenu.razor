@@ -4,28 +4,54 @@
     </div>
 
     <div class="d-flex">
-        <MudDivider DividerType="DividerType.Middle" Class="my-3"/>
+        <MudDivider DividerType="DividerType.Middle" Class="my-3" />
     </div>
 
-    <div class="d-flex">
-        <MudSwitch @bind-Checked="@KingEnabled" Label="Anti-King" Disabled="!EditingEnabled" Color="Color.Primary" />
-    </div>
-    <div class="d-flex">
-        <MudSwitch @bind-Checked="@KnightEnabled" Label="Anti-Knight" Disabled="!EditingEnabled" Color="Color.Primary" />
-    </div>
-    <div class="d-flex">
-        <MudSwitch @bind-Checked="@NonconsecutiveEnabled" Label="Nonconsecutive" Disabled="!EditingEnabled" Color="Color.Primary" />
-    </div>
-    <div class="d-flex">
-        <MudSwitch @bind-Checked="@DiagNonconsecutiveEnabled" Label="Diagonal Nonconsecutive" Disabled="!EditingEnabled" Color="Color.Primary" />
-    </div>
-    <div class="d-flex">
-        <MudSwitch @bind-Checked="@DisjointGroups" Label="Disjoint Groups" Disabled="!EditingEnabled" Color="Color.Primary" />
-    </div>
-    <div class="d-flex">
-        <MudSwitch @bind-Checked="@PositiveDiagonal" Label="Positive Diagonal" Disabled="!EditingEnabled" Color="Color.Primary" />
-    </div>
-    <div class="d-flex">
-        <MudSwitch @bind-Checked="@NegativeDiagonal" Label="Negative Diagonal" Disabled="!EditingEnabled" Color="Color.Primary" />
-    </div>
+    <MudExpansionPanels MultiExpansion="true">
+        <MudExpansionPanel>
+            <TitleContent>
+                <div class="d-flex">
+                    <MudIcon Icon="@Icons.Material.Language" class="mr-3"></MudIcon>
+                    <MudText>Global Constraints</MudText>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="d-flex flex-column justify-min pa-2 mx-2">
+                    <div class="d-flex">
+                        <MudSwitch @bind-Checked="@KingEnabled" Label="Anti-King" Disabled="!EditingEnabled" Color="Color.Primary" />
+                    </div>
+                    <div class="d-flex">
+                        <MudSwitch @bind-Checked="@KnightEnabled" Label="Anti-Knight" Disabled="!EditingEnabled" Color="Color.Primary" />
+                    </div>
+                    <div class="d-flex">
+                        <MudSwitch @bind-Checked="@NonconsecutiveEnabled" Label="Nonconsecutive" Disabled="!EditingEnabled" Color="Color.Primary" />
+                    </div>
+                    <div class="d-flex">
+                        <MudSwitch @bind-Checked="@DiagNonconsecutiveEnabled" Label="Diagonal Nonconsecutive" Disabled="!EditingEnabled" Color="Color.Primary" />
+                    </div>
+                    <div class="d-flex">
+                        <MudSwitch @bind-Checked="@DisjointGroups" Label="Disjoint Groups" Disabled="!EditingEnabled" Color="Color.Primary" />
+                    </div>
+                    <div class="d-flex">
+                        <MudSwitch @bind-Checked="@PositiveDiagonal" Label="Positive Diagonal" Disabled="!EditingEnabled" Color="Color.Primary" />
+                    </div>
+                    <div class="d-flex">
+                        <MudSwitch @bind-Checked="@NegativeDiagonal" Label="Negative Diagonal" Disabled="!EditingEnabled" Color="Color.Primary" />
+                    </div>
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
+        <MudExpansionPanel>
+            <TitleContent>
+                <div class="d-flex">
+                    <MudIcon Icon="@Icons.Material.LocationOn" class="mr-3"></MudIcon>
+                    <MudText>Local Constraints</MudText>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="d-flex flex-column justify-min pa-2 mx-2">
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
 </div>
