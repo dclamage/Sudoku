@@ -9,7 +9,7 @@ namespace SudokuBlazor.Shared
         private const double cellRectWidth = SudokuConstants.cellRectWidth;
 
         // UI
-        private readonly Rect[] colorRects = new Rect[81];
+        private readonly SvgRect[] colorRects = new SvgRect[81];
 
         private record Snapshot(string[] Colors);
 
@@ -55,7 +55,7 @@ namespace SudokuBlazor.Shared
             return hadChange;
         }
 
-        protected static Rect CreateColorRect(int i, int j, string color) => new Rect(
+        protected static SvgRect CreateColorRect(int i, int j, string color) => new SvgRect(
             x: j * cellRectWidth,
             y: i * cellRectWidth,
             width: cellRectWidth,

@@ -48,12 +48,14 @@ namespace SudokuBlazor.Shared
         private SudokuSelection selection;
         private SudokuValues values;
         private SudokuKeypad keypad;
+        private SudokuVisConstraints visConstraints;
 
         // Component accessors
         public SudokuColoring Coloring => coloring;
         public SudokuSelection Selection => selection;
         public SudokuValues Values => values;
         public SudokuKeypad Keypad => keypad;
+        public SudokuVisConstraints VisConstraints => visConstraints;
 
         // Services
         private readonly UndoHistory undoHistory = new UndoHistory();

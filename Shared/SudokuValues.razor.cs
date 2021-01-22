@@ -28,13 +28,15 @@ namespace SudokuBlazor.Shared
             Corner,
             Center
         }
-        private readonly Dictionary<(int, ValueType, int), Text> cellText = new Dictionary<(int, ValueType, int), Text>();
+        private readonly Dictionary<(int, ValueType, int), SvgText> cellText = new Dictionary<(int, ValueType, int), SvgText>();
         private readonly bool[] cellIsGiven = new bool[81];
         private readonly int[] cellValues = new int[81];
         private readonly uint[] cellCenterMarks = new uint[81];
         private readonly uint[] cellCornerMarks = new uint[81];
         private readonly Dictionary<int, Constraint> constraints = new();
         public string[] ConstraintStrings => constraints.Values.Select(c => c.Serialized).ToArray();
+        public SvgPath[] ConstraintSvgPaths => constraints.Values.Where(c => c.SvgPaths != null).SelectMany(c => c.SvgPaths).ToArray();
+        public SvgText[] ConstraintSvgText => constraints.Values.Where(c => c.SvgText != null).SelectMany(c => c.SvgText).ToArray();
 
         // Tables
         private readonly (double, double)[] cornerMarkOffsets = new (double, double)[9];
@@ -251,7 +253,7 @@ namespace SudokuBlazor.Shared
             return changed;
         }
 
-        private static Text CreateFilledText(int cellIndex, int value, string color) => new Text(
+        private static SvgText CreateFilledText(int cellIndex, int value, string color) => new SvgText(
             x: (cellIndex % 9 + 0.5) * cellRectWidth,
             y: (cellIndex / 9 + 0.5) * cellRectWidth + (cellRectWidth - valueFontSize) / 4.0,
             fontSize: valueFontSize,
@@ -434,7 +436,7 @@ namespace SudokuBlazor.Shared
                 double cellStartY = (cellIndex / 9) * cellRectWidth;
                 var (offsetX, offsetY) = cornerMarkOffsets[cornerIndex];
 
-                cellText[(cellIndex, ValueType.Corner, value)] = new Text(
+                cellText[(cellIndex, ValueType.Corner, value)] = new SvgText(
                     x: cellStartX + offsetX,
                     y: cellStartY + offsetY,
                     fontSize: markupFontSize,
@@ -475,7 +477,7 @@ namespace SudokuBlazor.Shared
                 double cellStartY = (cellIndex / 9) * cellRectWidth + cellRectWidth / 2.0;
                 double offsetX = (-0.5 * numCenterMarks + valueIndex + 0.5) * fontSize * fontWidthHeightRatio;
 
-                cellText[(cellIndex, ValueType.Center, value)] = new Text(
+                cellText[(cellIndex, ValueType.Center, value)] = new SvgText(
                     x: cellStartX + offsetX,
                     y: cellStartY,
                     fontSize: fontSize,
@@ -714,7 +716,7 @@ namespace SudokuBlazor.Shared
 
         public void SetConflict(int cellIndex, bool conflict)
         {
-            Text existingText = cellText[(cellIndex, 0, 0)];
+            SvgText existingText = cellText[(cellIndex, 0, 0)];
             string desiredColor = conflict ? conflictedColor : (cellIsGiven[cellIndex] ? givenColor : filledColor);
             if (existingText.color != desiredColor)
             {

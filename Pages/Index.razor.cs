@@ -100,10 +100,16 @@ namespace SudokuBlazor.Pages
                     case GlobalConstraints.DiagNonconsecutive:
                         newConstraint = new DiagonalNonconsecutiveConstraint();
                         break;
+                    case GlobalConstraints.PositiveDiagonal:
+                        newConstraint = new DiagonalGroupConstraint(DiagonalGroupConstraint.Direction.Positive);
+                        break;
+                    case GlobalConstraints.NegativeDiagonal:
+                        newConstraint = new DiagonalGroupConstraint(DiagonalGroupConstraint.Direction.Negative);
+                        break;
                     case GlobalConstraints.DisjointGroups:
-                        foreach (var curConstraint in DisjointGroupsConstraint.All(9))
+                        for (int i = 0; i < 9; i++)
                         {
-                            sudokuBoard.Values.AddConstraint(-(int)constraint - 100 * curConstraint.GroupIndex, curConstraint);
+                            sudokuBoard.Values.AddConstraint(-(int)constraint - i, new DisjointGroupsConstraint(i));
                         }
                         break;
                 }
@@ -116,13 +122,14 @@ namespace SudokuBlazor.Pages
             {
                 for (int i = 0; i < 9; i++)
                 {
-                    sudokuBoard.Values.RemoveConstraint(-(int)constraint - 100 * i);
+                    sudokuBoard.Values.RemoveConstraint(-(int)constraint - i);
                 }
             }
             else
             {
                 sudokuBoard.Values.RemoveConstraint(-(int)constraint);
             }
+            sudokuBoard.VisConstraints.SetSvgContent(sudokuBoard.Values.ConstraintSvgPaths, sudokuBoard.Values.ConstraintSvgText);
         }
     }
 }

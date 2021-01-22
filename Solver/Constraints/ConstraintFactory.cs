@@ -17,6 +17,7 @@ namespace SudokuBlazor.Solver.Constraints
                 "LittleKiller" => new LittleKillerConstraint(jobject),
                 "Nonconsecutive" => new NonconsecutiveConstraint(jobject),
                 "DisjointGroups" => new DisjointGroupsConstraint(jobject),
+                "DiagonalGroup" => new DiagonalGroupConstraint(jobject),
                 _ => null,
             };
         }

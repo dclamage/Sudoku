@@ -17,7 +17,7 @@ namespace SudokuBlazor.Shared
         private const double innerCellWidth = (SudokuConstants.viewboxSize - cellStrokeWidth) / 9.0;
 
         // State
-        private List<Path> paths = new List<Path>();
+        private List<SvgPath> paths = new List<SvgPath>();
 
         protected override void OnInitialized()
         {
@@ -44,8 +44,8 @@ namespace SudokuBlazor.Shared
                         boxPath.Append($"M{0},{bi * innerBoxWidth}H{SudokuConstants.viewboxSize}M{bi * innerBoxWidth},{0}V{SudokuConstants.viewboxSize}");
                     }
                 }
-                paths.Add(new Path(cellPath.ToString(), cellStrokeWidth));
-                paths.Add(new Path(boxPath.ToString(), boxStrokeWidth));
+                paths.Add(new SvgPath(cellPath.ToString(), cellStrokeWidth));
+                paths.Add(new SvgPath(boxPath.ToString(), boxStrokeWidth));
             }
         }
     }

@@ -16,7 +16,7 @@ namespace SudokuBlazor.Shared
         private int lastCellSelected = -1;
 
         // UI
-        private readonly Rect[] selectionRects = new Rect[81];
+        private readonly SvgRect[] selectionRects = new SvgRect[81];
 
         public void ResetLastSelectedCell()
         {
@@ -133,7 +133,7 @@ namespace SudokuBlazor.Shared
             SelectCell(i, j, controlDown, shiftDown, altDown);
         }
 
-        protected static Rect CreateSelectionRect(int i, int j) => new Rect(
+        protected static SvgRect CreateSelectionRect(int i, int j) => new SvgRect(
             x: j * cellRectWidth,
             y: i * cellRectWidth,
             width: cellRectWidth,

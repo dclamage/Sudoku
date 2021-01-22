@@ -12,7 +12,10 @@ namespace SudokuBlazor.Shared
         Knight,
         Nonconsecutive,
         DiagNonconsecutive,
-        DisjointGroups,
+        PositiveDiagonal,
+        NegativeDiagonal,
+        DisjointGroups, // Keep DisjointGroups as the last global constraint in the list
+        Max
     }
 
     public partial class ConstructionMenu
@@ -39,71 +42,58 @@ namespace SudokuBlazor.Shared
         public bool KingEnabled
         {
             get => _kingEnabled;
-            set
-            {
-                if (_kingEnabled != value)
-                {
-                    _kingEnabled = value;
-                    GlobalConstraintToggled?.Invoke(GlobalConstraints.King, value);
-                }
-            }
+            set => SetGlobalConstraint(GlobalConstraints.King, ref _kingEnabled, value);
         }
         private bool _kingEnabled = false;
 
         public bool KnightEnabled
         {
             get => _knightEnabled;
-            set
-            {
-                if (_knightEnabled != value)
-                {
-                    _knightEnabled = value;
-                    GlobalConstraintToggled?.Invoke(GlobalConstraints.Knight, value);
-                }
-            }
+            set => SetGlobalConstraint(GlobalConstraints.Knight, ref _knightEnabled, value);
         }
         private bool _knightEnabled = false;
 
         public bool NonconsecutiveEnabled
         {
             get => _nonconsecutiveEnabled;
-            set
-            {
-                if (_nonconsecutiveEnabled != value)
-                {
-                    _nonconsecutiveEnabled = value;
-                    GlobalConstraintToggled?.Invoke(GlobalConstraints.Nonconsecutive, value);
-                }
-            }
+            set => SetGlobalConstraint(GlobalConstraints.Nonconsecutive, ref _nonconsecutiveEnabled, value);
         }
         private bool _nonconsecutiveEnabled = false;
 
         public bool DiagNonconsecutiveEnabled
         {
             get => _diagNonconsecutiveEnabled;
-            set
-            {
-                if (_diagNonconsecutiveEnabled != value)
-                {
-                    _diagNonconsecutiveEnabled = value;
-                    GlobalConstraintToggled?.Invoke(GlobalConstraints.DiagNonconsecutive, value);
-                }
-            }
+            set => SetGlobalConstraint(GlobalConstraints.DiagNonconsecutive, ref _diagNonconsecutiveEnabled, value);
         }
         private bool _diagNonconsecutiveEnabled = false;
 
         public bool DisjointGroups
         {
             get => _disjointGroups;
-            set
-            {
-                if (_disjointGroups != value)
-                {
-                    _disjointGroups = value;
-                    GlobalConstraintToggled?.Invoke(GlobalConstraints.DisjointGroups, value);
-                }
-            }
+            set => SetGlobalConstraint(GlobalConstraints.DisjointGroups, ref _disjointGroups, value);
         }
         private bool _disjointGroups = false;
+
+        public bool PositiveDiagonal
+        {
+            get => _positiveDiagonal;
+            set => SetGlobalConstraint(GlobalConstraints.PositiveDiagonal, ref _positiveDiagonal, value);
+        }
+        private bool _positiveDiagonal = false;
+        public bool NegativeDiagonal
+        {
+            get => _negativeDiagonal;
+            set => SetGlobalConstraint(GlobalConstraints.NegativeDiagonal, ref _negativeDiagonal, value);
+        }
+        private bool _negativeDiagonal = false;
+
+        private void SetGlobalConstraint(GlobalConstraints constraint, ref bool var, bool value)
+        {
+            if (var != value)
+            {
+                var = value;
+                GlobalConstraintToggled?.Invoke(constraint, value);
+            }
+        }
     }
 }

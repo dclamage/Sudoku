@@ -1,0 +1,15 @@
+﻿@inherits ComponentDirtyRender
+
+@if (svgPaths != null)
+{
+    @foreach (var path in svgPaths)
+    {
+        <path d="@path.path" stroke-opacity="@path.opacity" fill="none" stroke-width="@path.strokeWidth" stroke="@path.color" stroke-dasharray="@path.strokeDashArray" stroke-linejoin="miter" />
+    }
+    @foreach (var text in svgText)
+    {
+        // The double <text> tag is because <text> is a special Blazor tag, so to put svg <text> it has to be enclosed in that special tag.
+        // https://stackoverflow.com/questions/64229877/how-to-add-svg-text-in-blazor-razor-file
+        <text><text @key="text" x="@text.x" y="@text.y" font-size="@text.fontSize" font-family="@text.fontFamily" dominant-baseline="middle" text-anchor="middle" fill="@text.color" style="pointer-events: none">@text.text</text></text>
+    }
+}

@@ -1,6 +1,6 @@
 ﻿namespace SudokuBlazor.Models
 {
-    public class Text
+    public class SvgText
     {
         public readonly double x;
         public readonly double y;
@@ -9,7 +9,7 @@
         public readonly string color;
         public readonly string text;
 
-        public Text(double x, double y, double fontSize, string fontFamily, string color, string text)
+        public SvgText(double x, double y, double fontSize, string fontFamily, string color, string text)
         {
             this.x = x;
             this.y = y;

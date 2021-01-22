@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using SudokuBlazor.Models;
 using static SudokuBlazor.Solver.SolverUtility;
 
 namespace SudokuBlazor.Solver.Constraints
@@ -32,6 +33,17 @@ namespace SudokuBlazor.Solver.Constraints
         /// Human-readable rules (in English) describing this constraint, which is presented to the end-user.
         /// </summary>
         public abstract string Rules { get; }
+
+        /// <summary>
+        /// The SVG path elements to add to the visual sudoku board to represent this constraint.
+        /// </summary>
+        public virtual SvgPath[] SvgPaths => null;
+
+        /// <summary>
+        /// The SVG text elements to add to the visual sudoku board to represent this constraint.
+        /// </summary>
+        public virtual SvgText[] SvgText => null;
+
 
         /// <summary>
         /// Go through the values that aren't currently marked as conflicts, and check if the value conflicts

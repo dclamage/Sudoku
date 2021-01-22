@@ -1,6 +1,6 @@
 ﻿namespace SudokuBlazor.Models
 {
-    public class Rect
+    public class SvgRect
     {
         public readonly double x;
         public readonly double y;
@@ -10,7 +10,7 @@
         public readonly double opacity;
         public readonly string color;
 
-        public Rect(double x, double y, double width, double height, double strokeWidth, double opacity = 1.0, string color = null)
+        public SvgRect(double x, double y, double width, double height, double strokeWidth, double opacity = 1.0, string color = null)
         {
             this.x = x;
             this.y = y;

@@ -8,14 +8,6 @@ namespace SudokuBlazor.Solver.Constraints
 {
     public class DisjointGroupsConstraint : Constraint
     {
-        public static IEnumerable<DisjointGroupsConstraint> All(int numGroups)
-        {
-            for (int i = 0; i < numGroups; i++)
-            {
-                yield return new DisjointGroupsConstraint(i);
-            }
-        }
-
         public int GroupIndex { get; set; }
 
         public DisjointGroupsConstraint(int groupIndex)
@@ -58,21 +50,27 @@ namespace SudokuBlazor.Solver.Constraints
         {
             get
             {
+                if (_group != null)
+                {
+                    return _group;
+                }
+
                 int groupi = GroupIndex / 3;
                 int groupj = GroupIndex % 3;
 
-                List<(int, int)> group = new(9);
+                _group = new(9);
                 for (int boxi = 0; boxi < 3; boxi++)
                 {
                     int celli = boxi * 3 + groupi;
                     for (int boxj = 0; boxj < 3; boxj++)
                     {
                         int cellj = boxj * 3 + groupj;
-                        group.Add((celli, cellj));
+                        _group.Add((celli, cellj));
                     }
                 }
-                return group;
+                return _group;
             }
         }
+        private List<(int, int)> _group = null;
     }
 }
