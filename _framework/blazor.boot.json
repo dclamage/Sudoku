@@ -7,7 +7,7 @@
   "linkerEnabled": false,
   "resources": {
     "assembly": {
-      "SudokuBlazor.dll": "sha256-XSHI9+1wir8f577US0ZiGKMxVm4Z23cOvl7z7HYNWgM=",
+      "SudokuBlazor.dll": "sha256-tdPAvmBztLpScBp3WL4r3TcJ6DDvVB50wMdLYM74lhY=",
       "Microsoft.CSharp.dll": "sha256-JWW\/4VOX8B0ELTP\/v4O7wlgWY8ZyVIv0BTIRIv2TJBw=",
       "Microsoft.VisualBasic.Core.dll": "sha256-\/9kBfwlTqN2R\/tiMVV76A72VsrUfSVAYs2v\/5mi38Mk=",
       "Microsoft.VisualBasic.dll": "sha256-WrQGoCtjVGnegfi0WxOTvOc0kZXDcuJ\/tg3XRe6YPlw=",
