@@ -466,6 +466,10 @@ namespace SudokuBlazor.Solver
                     case LogicResult.None:
                         completedEvent?.Invoke(null, ("No more logical steps found.", FlatBoard));
                         return;
+                    case LogicResult.Invalid:
+                        progressEvent?.Invoke(null, (logicDescription.ToString(), FlatBoard));
+                        completedEvent?.Invoke(null, ("Puzzle has no solutions.", FlatBoard));
+                        return;
                     case LogicResult.PuzzleComplete:
                         completedEvent?.Invoke(null, (logicDescription.ToString(), FlatBoard));
                         return;
@@ -1057,8 +1061,6 @@ namespace SudokuBlazor.Solver
 
         private LogicResult FindHiddenSingle(StringBuilder stepDescription)
         {
-            string stepPrefix = "Hidden single:";
-
             LogicResult finalFindResult = LogicResult.None;
             foreach (var group in Groups)
             {
@@ -1089,7 +1091,7 @@ namespace SudokuBlazor.Solver
                         if (!SetValue(vali, valj, val))
                         {
                             stepDescription.Clear();
-                            stepDescription.Append($"{stepPrefix} {CellName(vali, valj)} cannot be set to {val}.");
+                            stepDescription.Append($"Hidden single {val} in {group.Name} {CellName(vali, valj)}, but it cannot be set to that value.");
                             return LogicResult.Invalid;
                         }
                         stepDescription.Append($"Hidden single {val} in {group.Name} {CellName(vali, valj)}");
@@ -1098,7 +1100,7 @@ namespace SudokuBlazor.Solver
                     else if (numWithVal == 0)
                     {
                         stepDescription.Clear();
-                        stepDescription.Append($"{stepPrefix} {group.Name} has nowhere to place {val}.");
+                        stepDescription.Append($"{group.Name} has nowhere to place {val}.");
                         return LogicResult.Invalid;
                     }
                 }
@@ -1108,8 +1110,6 @@ namespace SudokuBlazor.Solver
 
         private LogicResult FindNakedTuples(StringBuilder stepDescription)
         {
-            const string stepPrefix = "Naked tuple:";
-
             List<(int, int)> unsetCells = new List<(int, int)>(MAX_VALUE);
             for (int tupleSize = 2; tupleSize < 8; tupleSize++)
             {
@@ -1162,7 +1162,7 @@ namespace SudokuBlazor.Solver
                                         board[curCell.Item1, curCell.Item2] = remainingMask;
                                         if (!changed)
                                         {
-                                            stepDescription.Append($"{stepPrefix} {group} has tuple {MaskToString(combinationMask)}, removing those values from {CellName(curCell)}");
+                                            stepDescription.Append($"{group} has tuple {MaskToString(combinationMask)}, removing those values from {CellName(curCell)}");
                                             changed = true;
                                         }
                                         else
@@ -1180,7 +1180,7 @@ namespace SudokuBlazor.Solver
                             if (numMatching > tupleSize)
                             {
                                 stepDescription.Clear();
-                                stepDescription.Append($"{stepPrefix} {group} has too many cells ({tupleSize}) which can only have {MaskToString(combinationMask)}");
+                                stepDescription.Append($"{group} has too many cells ({tupleSize}) which can only have {MaskToString(combinationMask)}");
                                 return LogicResult.Invalid;
                             }
                             if (changed)
@@ -1196,8 +1196,6 @@ namespace SudokuBlazor.Solver
 
         private LogicResult FindPointingTuples(StringBuilder stepDescription)
         {
-            const string stepPrefix = "Pointing tuple:";
-
             foreach (var group in Groups)
             {
                 if (group.Cells.Count != MAX_VALUE)
@@ -1251,7 +1249,7 @@ namespace SudokuBlazor.Solver
                             if (!ClearValue(i, j, v))
                             {
                                 stepDescription.Clear();
-                                stepDescription.Append($"{stepPrefix} {v} is limited to {cellsWithValueStringBuilder} in {group}, but that value cannot be removed from {CellName(i, j)}");
+                                stepDescription.Append($"{v} is limited to {cellsWithValueStringBuilder} in {group}, but that value cannot be removed from {CellName(i, j)}");
                                 return LogicResult.Invalid;
                             }
                             if (!changed)
