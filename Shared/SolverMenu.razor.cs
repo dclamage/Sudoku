@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
@@ -206,7 +207,10 @@ namespace SudokuBlazor.Shared
 
         private void ReceiveLogicalSolveProgress(object _, (string, uint[]) parameters)
         {
-            ConsoleLines.Add(parameters.Item1);
+            foreach (var line in parameters.Item1.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                ConsoleLines.Add(line);
+            }
             needSnapshot |= Board.Values.SetAllCenterPencilMarks(parameters.Item2, SudokuValues.SingleValueBehavior.RespectValueSetBit);
             StateHasChanged();
         }

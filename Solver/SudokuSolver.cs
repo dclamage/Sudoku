@@ -450,10 +450,14 @@ namespace SudokuBlazor.Solver
         public async Task LogicalSolve(EventHandler<(string, uint[])> progressEvent, EventHandler<(string, uint[])> completedEvent, CancellationToken? cancellationToken)
         {
             Stopwatch timeSinceCheck = Stopwatch.StartNew();
+            StringBuilder logicProgress = new();
             while (true)
             {
                 if (timeSinceCheck.ElapsedMilliseconds > 1000)
                 {
+                    progressEvent?.Invoke(null, (logicProgress.ToString(), FlatBoard));
+                    logicProgress.Clear();
+
                     await Task.Delay(1);
                     cancellationToken?.ThrowIfCancellationRequested();
                     timeSinceCheck.Restart();
@@ -461,21 +465,31 @@ namespace SudokuBlazor.Solver
 
                 StringBuilder logicDescription = new StringBuilder();
                 LogicResult result = StepLogic(logicDescription);
+                logicProgress.Append(logicDescription).AppendLine();
+
                 switch (result)
                 {
                     case LogicResult.None:
-                        completedEvent?.Invoke(null, ("No more logical steps found.", FlatBoard));
+                        {
+                            var flatBoard = FlatBoard;
+                            progressEvent?.Invoke(null, (logicProgress.ToString(), flatBoard));
+                            completedEvent?.Invoke(null, ("No more logical steps found.", flatBoard));
+                        }
                         return;
                     case LogicResult.Invalid:
-                        progressEvent?.Invoke(null, (logicDescription.ToString(), FlatBoard));
-                        completedEvent?.Invoke(null, ("Puzzle has no solutions.", FlatBoard));
+                        {
+                            var flatBoard = FlatBoard;
+                            progressEvent?.Invoke(null, (logicProgress.ToString(), flatBoard));
+                            completedEvent?.Invoke(null, ("Puzzle has no solutions.", flatBoard));
+                        }
                         return;
                     case LogicResult.PuzzleComplete:
-                        completedEvent?.Invoke(null, (logicDescription.ToString(), FlatBoard));
+                        {
+                            var flatBoard = FlatBoard;
+                            progressEvent?.Invoke(null, (logicProgress.ToString(), flatBoard));
+                            completedEvent?.Invoke(null, (logicDescription.ToString(), FlatBoard));
+                        }
                         return;
-                    default:
-                        progressEvent?.Invoke(null, (logicDescription.ToString(), FlatBoard));
-                        break;
                 }
             }
         }
