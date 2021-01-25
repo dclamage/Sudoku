@@ -471,23 +471,19 @@ namespace SudokuBlazor.Solver
                 {
                     case LogicResult.None:
                         {
-                            var flatBoard = FlatBoard;
-                            progressEvent?.Invoke(null, (logicProgress.ToString(), flatBoard));
-                            completedEvent?.Invoke(null, ("No more logical steps found.", flatBoard));
+                            logicProgress.Append("No more logical steps found.");
+                            completedEvent?.Invoke(null, (logicProgress.ToString(), FlatBoard));
                         }
                         return;
                     case LogicResult.Invalid:
                         {
-                            var flatBoard = FlatBoard;
-                            progressEvent?.Invoke(null, (logicProgress.ToString(), flatBoard));
-                            completedEvent?.Invoke(null, ("Puzzle has no solutions.", flatBoard));
+                            logicProgress.Append("Puzzle has no solutions.");
+                            completedEvent?.Invoke(null, (logicProgress.ToString(), FlatBoard));
                         }
                         return;
                     case LogicResult.PuzzleComplete:
                         {
-                            var flatBoard = FlatBoard;
-                            progressEvent?.Invoke(null, (logicProgress.ToString(), flatBoard));
-                            completedEvent?.Invoke(null, (logicDescription.ToString(), FlatBoard));
+                            completedEvent?.Invoke(null, (logicProgress.ToString(), FlatBoard));
                         }
                         return;
                 }
