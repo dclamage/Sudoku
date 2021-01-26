@@ -7,7 +7,7 @@
     <div @ref="appbarDiv">
         <MudAppBarExt Elevation="1" Fixed="true">
             <MudTooltip Text="@(DrawerOpen ? "Close Drawer" : "Open Drawer")">
-                <MudIconButton Icon="@Icons.Material.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+                <MudIconButton Icon="@Icons.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
             </MudTooltip>
             <MudAppBarSpacer />
             <MudGrid Spacing="0" Justify="Justify.Center">
@@ -23,7 +23,7 @@
             </MudGrid>
             <MudAppBarSpacer />
             <MudTooltip Text="GitHub repository">
-                <MudIconButton Icon="@Icons.Custom.GitHub" Color="Color.Inherit" Link="https://github.com/dclamage/Sudoku" Target="_blank" />
+                <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/dclamage/Sudoku" Target="_blank" />
             </MudTooltip>
         </MudAppBarExt>
     </div>
@@ -36,7 +36,7 @@
                 <MudExpansionPanel>
                     <TitleContent>
                         <div class="d-flex">
-                            <MudIcon Icon="@Icons.Material.Info" class="mr-3"></MudIcon>
+                            <MudIcon Icon="@Icons.Filled.Info" class="mr-3"></MudIcon>
                             <MudText>Puzzle Info</MudText>
                         </div>
                     </TitleContent>
@@ -49,7 +49,7 @@
                 <MudExpansionPanel>
                     <TitleContent>
                         <div class="d-flex">
-                            <MudIcon Icon="@Icons.Material.Construction" class="mr-3"></MudIcon>
+                            <MudIcon Icon="@Icons.Filled.Construction" class="mr-3"></MudIcon>
                             <MudText>Construct</MudText>
                         </div>
                     </TitleContent>
@@ -62,7 +62,7 @@
                 <MudExpansionPanel>
                     <TitleContent>
                         <div class="d-flex">
-                            <MudIcon Icon="@Icons.Material.Computer" class="mr-3"></MudIcon>
+                            <MudIcon Icon="@Icons.Filled.Computer" class="mr-3"></MudIcon>
                             <MudText>Solver</MudText>
                         </div>
                     </TitleContent>

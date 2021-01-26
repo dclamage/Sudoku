@@ -42,7 +42,7 @@
                 Class="ma-1 px-2 rounded mode-button"
                 Color="@modeButtonColors[(int)MarkMode.Color]"
                 DisableElevation="true"
-                Icon="@Icons.Material.Palette"
+                Icon="@Icons.Filled.Palette"
                 IconSize="Size.Large"
                 Size="Size.Large"
                 OnClick="@(() => ColorModePressed(MarkMode.Color))" />
@@ -103,7 +103,7 @@
                                         title="Delete Custom Color"
                                         Class="custom-color-close"
                                         Size="Size.Small"
-                                        Icon="@Icons.Material.Close"
+                                        Icon="@Icons.Filled.Close"
                                         OnClick="@(() => DeleteCustomColor(colorFinalIndex))" />
                                 }
                             </MudFabExt>
@@ -123,7 +123,7 @@
                     Class="ma-1 px-2 rounded numpad-button"
                     Color="Color.Error"
                     DisableElevation="true"
-                    Icon="@Icons.Material.Backspace"
+                    Icon="@Icons.Filled.Backspace"
                     Size="Size.Large"
                     IconSize="Size.Large"
                     Disabled="@IsKeypadDisabled"
@@ -137,7 +137,7 @@
             <MudTooltip Text="Add a custom color">
                 <div class="mud-button-root mud-fab mud-ripple mud-fab-disable-elevation ma-1 px-2 rounded numpad-button">
                     <input type="color" class="custom-color-picker" @bind="PickedColor" />
-                    <MudIcon class="custom-color-icon" Icon="@Icons.Material.ControlPoint" />
+                    <MudIcon class="custom-color-icon" Icon="@Icons.Filled.ControlPoint" />
                 </div>
             </MudTooltip>
             <MudTooltip Text="Clear Coloring">
@@ -146,7 +146,7 @@
                     Class="ma-1 px-2 rounded numpad-button"
                     Style="background-color: #ffffff;"
                     DisableElevation="true"
-                    Icon="@Icons.Material.Backspace"
+                    Icon="@Icons.Filled.Backspace"
                     Size="Size.Large"
                     IconSize="Size.Large"
                     Disabled="@IsKeypadDisabled"
@@ -164,7 +164,7 @@
                 Class="ma-1 px-2 rounded mode-button"
                 Color="Color.Secondary"
                 DisableElevation="true"
-                Icon="@Icons.Material.Undo"
+                Icon="@Icons.Filled.Undo"
                 Size="Size.Large"
                 IconSize="Size.Large"
                 Disabled="@IsKeypadDisabled"
@@ -176,7 +176,7 @@
                 Class="ma-1 px-2 rounded mode-button"
                 Color="Color.Secondary"
                 DisableElevation="true"
-                Icon="@Icons.Material.Redo"
+                Icon="@Icons.Filled.Redo"
                 Size="Size.Large"
                 IconSize="Size.Large"
                 Disabled="@IsKeypadDisabled"
@@ -188,7 +188,7 @@
                 Class="ma-1 px-2 rounded mode-button"
                 Color="Color.Secondary"
                 DisableElevation="true"
-                Icon="@Icons.Material.Photo"
+                Icon="@Icons.Filled.Photo"
                 Size="Size.Large"
                 IconSize="Size.Large"
                 OnClick="@SaveScreenshot" />
