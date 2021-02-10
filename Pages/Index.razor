@@ -3,9 +3,9 @@
 
 @inject IJSRuntime JS;
 
-<MudLayoutExt>
+<MudLayout>
     <div @ref="appbarDiv">
-        <MudAppBarExt Elevation="1" Fixed="true">
+        <MudAppBar Elevation="1" Fixed="true">
             <MudTooltip Text="@(DrawerOpen ? "Close Drawer" : "Open Drawer")">
                 <MudIconButton Icon="@Icons.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
             </MudTooltip>
@@ -25,9 +25,9 @@
             <MudTooltip Text="GitHub repository">
                 <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/dclamage/Sudoku" Target="_blank" />
             </MudTooltip>
-        </MudAppBarExt>
+        </MudAppBar>
     </div>
-    <MudDrawerExt @bind-Open="@DrawerOpen" Clipped="true" Elevation="1">
+    <MudDrawer @bind-Open="@DrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="1" Variant="@DrawerVariant.Persistent">
         <div @ref="drawerDiv">
             <MudDrawerHeader>
                 <MudText Typo="Typo.h6">Setting Tools</MudText>
@@ -72,8 +72,8 @@
                 </MudExpansionPanel>
             </MudExpansionPanels>
         </div>
-    </MudDrawerExt>
-    <MudMainContentExt Class="pt-16 px-16">
+    </MudDrawer>
+    <MudMainContent Class="pt-16 px-16">
         <SudokuBoard @ref="sudokuBoard" Givens="@Givens" />
-    </MudMainContentExt>
-</MudLayoutExt>
+    </MudMainContent>
+</MudLayout>
