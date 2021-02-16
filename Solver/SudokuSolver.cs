@@ -33,7 +33,7 @@ namespace SudokuBlazor.Solver
         }
 
         private readonly List<Constraint> constraints;
-        
+
         /// <summary>
         /// Groups which cannot contain more than one of the same digit.
         /// This will at least contain all rows, columns, and boxes.
@@ -644,7 +644,7 @@ namespace SudokuBlazor.Solver
         /// <param name="progressEvent">An event to receive the progress count as solutions are found.</param>
         /// <param name="cancellationToken">Pass in to support cancelling the count.</param>
         /// <returns>The solution count found.</returns>
-        public async Task<ulong> CountSolutions(ulong maxSolutions = 0, EventHandler<ulong> progressEvent = null,  CancellationToken? cancellationToken = null)
+        public async Task<ulong> CountSolutions(ulong maxSolutions = 0, EventHandler<ulong> progressEvent = null, CancellationToken? cancellationToken = null)
         {
             bool wasBruteForcing = isBruteForcing;
             isBruteForcing = true;
@@ -949,6 +949,12 @@ namespace SudokuBlazor.Solver
             }
 
             result = FindFishes(stepDescription);
+            if (result != LogicResult.None)
+            {
+                return result;
+            }
+
+            result = FindYWings(stepDescription);
             if (result != LogicResult.None)
             {
                 return result;
@@ -1404,6 +1410,151 @@ namespace SudokuBlazor.Solver
 
                                 if (changed)
                                 {
+                                    return LogicResult.Changed;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return LogicResult.None;
+        }
+
+        private LogicResult FindYWings(StringBuilder stepDescription)
+        {
+            if (isBruteForcing)
+            {
+                return LogicResult.None;
+            }
+
+            // A y-wing always involves three cells with two candidates remaining.
+            // The three cells have 3 candidates between them, and one cell sees both of them.
+            // Any cell seen by the "wings" that don't see each other cannot be the candidate that's
+            // not in the "hinge" cell.
+            List<(int, int)> cellsWithTwoCandidates = new();
+            for (int i = 0; i < HEIGHT; i++)
+            {
+                for (int j = 0; j < WIDTH; j++)
+                {
+                    uint mask = board[i, j];
+                    if (IsValueSet(mask))
+                    {
+                        continue;
+                    }
+                    if (ValueCount(mask) == 2)
+                    {
+                        cellsWithTwoCandidates.Add((i, j));
+                    }
+                }
+            }
+
+            if (cellsWithTwoCandidates.Count < 3)
+            {
+                return LogicResult.None;
+            }
+
+            for (int c0 = 0; c0 < cellsWithTwoCandidates.Count - 2; c0++)
+            {
+                var (i0, j0) = cellsWithTwoCandidates[c0];
+                uint mask0 = board[i0, j0];
+                for (int c1 = c0 + 1; c1 < cellsWithTwoCandidates.Count - 1; c1++)
+                {
+                    var (i1, j1) = cellsWithTwoCandidates[c1];
+                    uint mask1 = board[i1, j1];
+                    if (mask0 == mask1)
+                    {
+                        continue;
+                    }
+
+                    for (int c2 = c1 + 1; c2 < cellsWithTwoCandidates.Count; c2++)
+                    {
+                        var (i2, j2) = cellsWithTwoCandidates[c2];
+                        uint mask2 = board[i2, j2];
+                        if (mask0 == mask2 || mask1 == mask2)
+                        {
+                            continue;
+                        }
+
+                        uint combinedMask = mask0 | mask1 | mask2;
+                        if (ValueCount(combinedMask) == 3)
+                        {
+                            var seen0 = SeenCells((i0, j0));
+                            var seen1 = SeenCells((i1, j1));
+                            var seen2 = SeenCells((i2, j2));
+                            (int, int) pivot = (0, 0);
+                            (int, int) pincer0 = (0, 0);
+                            (int, int) pincer1 = (0, 0);
+                            uint pivotMask = 0;
+                            uint pincer0Mask = 0;
+                            uint pincer1Mask = 0;
+                            uint removeMask = 0;
+                            HashSet<(int, int)> removeFrom = null;
+                            if (seen0.Contains((i1, j1)) && seen0.Contains((i2, j2)) && !seen1.Contains((i2, j2)))
+                            {
+                                // Hinge is 0, the shared value is the value not in cell 0
+                                removeMask = combinedMask & ~mask0;
+                                removeFrom = SeenCells((i1, j1), (i2, j2));
+                                pivot = (i0, j0);
+                                pincer0 = (i1, j1);
+                                pincer1 = (i2, j2);
+                                pivotMask = mask0;
+                                pincer0Mask = mask1;
+                                pincer1Mask = mask2;
+                            }
+                            else if (seen1.Contains((i0, j0)) && seen1.Contains((i2, j2)) && !seen0.Contains((i2, j2)))
+                            {
+                                // Hinge is 1, the shared value is the value not in cell 1
+                                removeMask = combinedMask & ~mask1;
+                                removeFrom = SeenCells((i0, j0), (i2, j2));
+                                pivot = (i1, j1);
+                                pincer0 = (i0, j0);
+                                pincer1 = (i2, j2);
+                                pivotMask = mask1;
+                                pincer0Mask = mask0;
+                                pincer1Mask = mask2;
+                            }
+                            else if (seen2.Contains((i0, j0)) && seen2.Contains((i1, j1)) && !seen0.Contains((i1, j1)))
+                            {
+                                // Hinge is 2, the shared value is the value not in cell 2
+                                removeMask = combinedMask & ~mask2;
+                                removeFrom = SeenCells((i0, j0), (i1, j1));
+                                pivot = (i2, j2);
+                                pincer0 = (i0, j0);
+                                pincer1 = (i1, j1);
+                                pivotMask = mask2;
+                                pincer0Mask = mask0;
+                                pincer1Mask = mask1;
+                            }
+
+                            if (removeFrom != null)
+                            {
+                                List<(int, int)> removedFrom = new();
+                                foreach (var (ri, rj) in removeFrom)
+                                {
+                                    LogicResult removeResult = ClearMask(ri, rj, removeMask);
+                                    if (removeResult == LogicResult.Invalid)
+                                    {
+                                        return LogicResult.Invalid;
+                                    }
+                                    if (removeResult == LogicResult.Changed)
+                                    {
+                                        removedFrom.Add((ri, rj));
+                                    }
+                                }
+                                if (removedFrom.Count > 0)
+                                {
+                                    stepDescription.Append($"Y-Wing with pivot at {CellName(pivot)} ({MaskToString(pivotMask)}) and pincers at {CellName(pincer0)} ({MaskToString(pincer0Mask)}), {CellName(pincer1)} ({MaskToString(pincer1Mask)}) clears candidate {GetValue(removeMask)} from cell{(removedFrom.Count == 1 ? "" : "s")}: ");
+                                    bool needComma = false;
+                                    foreach (var cell in removedFrom)
+                                    {
+                                        if (needComma)
+                                        {
+                                            stepDescription.Append(", ");
+                                        }
+                                        stepDescription.Append($"{CellName(cell)}");
+                                        needComma = true;
+                                    }
                                     return LogicResult.Changed;
                                 }
                             }
