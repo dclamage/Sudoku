@@ -1454,6 +1454,7 @@ namespace SudokuBlazor.Solver
                 return LogicResult.None;
             }
 
+            // Look for Y-Wings
             for (int c0 = 0; c0 < cellsWithTwoCandidates.Count - 2; c0++)
             {
                 var (i0, j0) = cellsWithTwoCandidates[c0];
@@ -1462,7 +1463,7 @@ namespace SudokuBlazor.Solver
                 {
                     var (i1, j1) = cellsWithTwoCandidates[c1];
                     uint mask1 = board[i1, j1];
-                    if (mask0 == mask1)
+                    if (mask0 == mask1 || ValueCount(mask0 | mask1) != 3)
                     {
                         continue;
                     }
@@ -1563,6 +1564,66 @@ namespace SudokuBlazor.Solver
                 }
             }
 
+            // Look for XYZ-Wings
+            for (int c0 = 0; c0 < cellsWithTwoCandidates.Count - 1; c0++)
+            {
+                var (i0, j0) = cellsWithTwoCandidates[c0];
+                uint mask0 = board[i0, j0];
+                for (int c1 = c0 + 1; c1 < cellsWithTwoCandidates.Count; c1++)
+                {
+                    var (i1, j1) = cellsWithTwoCandidates[c1];
+                    uint mask1 = board[i1, j1];
+                    if (mask0 == mask1)
+                    {
+                        continue;
+                    }
+
+                    uint combMask = mask0 | mask1;
+                    if (ValueCount(combMask) != 3)
+                    {
+                        continue;
+                    }
+
+                    uint removeMask = mask0 & mask1;
+
+                    // Look for a cells seen by both of these pincers that contains these exact 3 candidates:
+                    foreach (var (pi, pj) in SeenCells((i0, j0), (i1, j1)))
+                    {
+                        if (board[pi, pj] == combMask)
+                        {
+                            // Check for cells seen by all three
+                            List<(int, int)> removedFrom = new();
+                            foreach (var (ri, rj) in SeenCells((i0, j0), (i1, j1), (pi, pj)))
+                            {
+                                LogicResult removeResult = ClearMask(ri, rj, removeMask);
+                                if (removeResult == LogicResult.Invalid)
+                                {
+                                    return LogicResult.Invalid;
+                                }
+                                if (removeResult == LogicResult.Changed)
+                                {
+                                    removedFrom.Add((ri, rj));
+                                }
+                            }
+                            if (removedFrom.Count > 0)
+                            {
+                                stepDescription.Append($"XYZ-Wing with pivot at {CellName((pi, pj))} ({MaskToString(combMask)}) and pincers at {CellName((i0, j0))} ({MaskToString(mask0)}), {CellName((i1, j1))} ({MaskToString(mask1)}) clears candidate {GetValue(removeMask)} from cell{(removedFrom.Count == 1 ? "" : "s")}: ");
+                                bool needComma = false;
+                                foreach (var cell in removedFrom)
+                                {
+                                    if (needComma)
+                                    {
+                                        stepDescription.Append(", ");
+                                    }
+                                    stepDescription.Append($"{CellName(cell)}");
+                                    needComma = true;
+                                }
+                                return LogicResult.Changed;
+                            }
+                        }
+                    }
+                }
+            }
             return LogicResult.None;
         }
 
