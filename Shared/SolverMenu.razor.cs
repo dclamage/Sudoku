@@ -159,10 +159,16 @@ namespace SudokuBlazor.Shared
             RespectFilledMarks = true;
             RespectCenterMarks = true;
 
+            // Enable to be able to debug logical stepping
+#if false
+            SudokuSolver solver = SudokuSolveService.CreateSolver(cellValues, constraints);
+            solver.LogicalStep(ReceiveLogicalStepCompleted);
+#else
             await initSolverWorkersTask;
             await solverService.RunAsync(s => s.PrepSolve());
             await solverService.RunAsync(s => s.LogicalStep(cellValues, constraints));
             await ShowDelayedSpinner();
+#endif
         }
 
         private void ReceiveLogicalStepCompleted(object _, (string, uint[]) parameters)

@@ -1432,7 +1432,7 @@ namespace SudokuBlazor.Solver
             // The three cells have 3 candidates between them, and one cell sees both of them.
             // Any cell seen by the "wings" that don't see each other cannot be the candidate that's
             // not in the "hinge" cell.
-            List<(int, int)> cellsWithTwoCandidates = new();
+            List<(int, int)> candidateCells = new();
             for (int i = 0; i < HEIGHT; i++)
             {
                 for (int j = 0; j < WIDTH; j++)
@@ -1444,33 +1444,28 @@ namespace SudokuBlazor.Solver
                     }
                     if (ValueCount(mask) == 2)
                     {
-                        cellsWithTwoCandidates.Add((i, j));
+                        candidateCells.Add((i, j));
                     }
                 }
             }
 
-            if (cellsWithTwoCandidates.Count < 3)
-            {
-                return LogicResult.None;
-            }
-
             // Look for Y-Wings
-            for (int c0 = 0; c0 < cellsWithTwoCandidates.Count - 2; c0++)
+            for (int c0 = 0; c0 < candidateCells.Count - 2; c0++)
             {
-                var (i0, j0) = cellsWithTwoCandidates[c0];
+                var (i0, j0) = candidateCells[c0];
                 uint mask0 = board[i0, j0];
-                for (int c1 = c0 + 1; c1 < cellsWithTwoCandidates.Count - 1; c1++)
+                for (int c1 = c0 + 1; c1 < candidateCells.Count - 1; c1++)
                 {
-                    var (i1, j1) = cellsWithTwoCandidates[c1];
+                    var (i1, j1) = candidateCells[c1];
                     uint mask1 = board[i1, j1];
                     if (mask0 == mask1 || ValueCount(mask0 | mask1) != 3)
                     {
                         continue;
                     }
 
-                    for (int c2 = c1 + 1; c2 < cellsWithTwoCandidates.Count; c2++)
+                    for (int c2 = c1 + 1; c2 < candidateCells.Count; c2++)
                     {
-                        var (i2, j2) = cellsWithTwoCandidates[c2];
+                        var (i2, j2) = candidateCells[c2];
                         uint mask2 = board[i2, j2];
                         if (mask0 == mask2 || mask1 == mask2)
                         {
@@ -1565,13 +1560,13 @@ namespace SudokuBlazor.Solver
             }
 
             // Look for XYZ-Wings
-            for (int c0 = 0; c0 < cellsWithTwoCandidates.Count - 1; c0++)
+            for (int c0 = 0; c0 < candidateCells.Count - 1; c0++)
             {
-                var (i0, j0) = cellsWithTwoCandidates[c0];
+                var (i0, j0) = candidateCells[c0];
                 uint mask0 = board[i0, j0];
-                for (int c1 = c0 + 1; c1 < cellsWithTwoCandidates.Count; c1++)
+                for (int c1 = c0 + 1; c1 < candidateCells.Count; c1++)
                 {
-                    var (i1, j1) = cellsWithTwoCandidates[c1];
+                    var (i1, j1) = candidateCells[c1];
                     uint mask1 = board[i1, j1];
                     if (mask0 == mask1)
                     {
@@ -1624,6 +1619,214 @@ namespace SudokuBlazor.Solver
                     }
                 }
             }
+
+            // Look for WXYZ-Wings
+            candidateCells.Clear();
+            for (int i = 0; i < HEIGHT; i++)
+            {
+                for (int j = 0; j < WIDTH; j++)
+                {
+                    uint mask = board[i, j];
+                    if (IsValueSet(mask))
+                    {
+                        continue;
+                    }
+                    if (ValueCount(mask) <= 3)
+                    {
+                        candidateCells.Add((i, j));
+                    }
+                }
+            }
+
+            for (int c0 = 0; c0 < candidateCells.Count - 2; c0++)
+            {
+                var (i0, j0) = candidateCells[c0];
+                uint mask0 = board[i0, j0];
+                for (int c1 = c0 + 1; c1 < candidateCells.Count - 1; c1++)
+                {
+                    var (i1, j1) = candidateCells[c1];
+                    uint mask1 = board[i1, j1];
+                    for (int c2 = c1 + 1; c2 < candidateCells.Count; c2++)
+                    {
+                        var (i2, j2) = candidateCells[c2];
+                        uint mask2 = board[i2, j2];
+
+                        uint removeMask = mask0 & mask1 & mask2;
+                        if (removeMask == 0 || ValueCount(removeMask) != 1)
+                        {
+                            continue;
+                        }
+
+                        uint combMask = mask0 | mask1 | mask2;
+                        if (ValueCount(combMask) != 4)
+                        {
+                            continue;
+                        }
+
+                        int count0 = ValueCount(mask0);
+                        int count1 = ValueCount(mask1);
+                        int count2 = ValueCount(mask2);
+                        // If all three pincers have three candidates it can't be valid
+                        if (count0 == 3 && count1 == 3 && count2 == 3)
+                        {
+                            continue;
+                        }
+
+                        // If all three pincers have two candidates it's always valid
+                        if (count0 != 2 || count1 != 2 || count2 != 2)
+                        {
+                            bool seen01 = SeenCells((i0, j0)).Contains((i1, j1));
+                            bool seen02 = SeenCells((i0, j0)).Contains((i2, j2));
+                            bool seen12 = SeenCells((i1, j1)).Contains((i2, j2));
+
+                            // If two pincers have three candidates, then they must have equal candidates and see each other
+                            if (count0 == 3 && count1 == 3 && (mask0 != mask1 || !seen01) ||
+                                count0 == 3 && count2 == 3 && (mask0 != mask2 || !seen02) ||
+                                count1 == 3 && count2 == 3 && (mask1 != mask2 || !seen12))
+                            {
+                                continue;
+                            }
+                            // If one pincer has three candidates, it must see one of the other pincers and have all the candidates of that pincer
+                            else if (count0 == 3 && count1 == 2 && count2 == 2)
+                            {
+                                if (seen01 && seen02)
+                                {
+                                    if ((mask0 & mask1) != mask1 && (mask0 & mask2) != mask2)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                else if (seen01)
+                                {
+                                    if ((mask0 & mask1) != mask1)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                else if(seen02)
+                                {
+                                    if ((mask0 & mask2) != mask2)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                continue;
+                            }
+                            else if (count1 == 3 && count0 == 2 && count2 == 2)
+                            {
+                                if (seen01 && seen12)
+                                {
+                                    if ((mask1 & mask0) != mask0 && (mask1 & mask2) != mask2)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                else if (seen01)
+                                {
+                                    if ((mask1 & mask0) != mask0)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                else if (seen12)
+                                {
+                                    if ((mask1 & mask2) != mask2)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                continue;
+                            }
+                            else if (count2 == 3 && count0 == 2 && count1 == 2)
+                            {
+                                if (seen02 && seen12)
+                                {
+                                    if ((mask2 & mask0) != mask0 && (mask2 & mask1) != mask1)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                else if (seen02)
+                                {
+                                    if ((mask2 & mask0) != mask0)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                else if (seen12)
+                                {
+                                    if ((mask2 & mask1) != mask1)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                continue;
+                            }
+                        }
+
+                        // Look for a pivot that sees all three of these pincers and has all only the candidates present in the pincers
+                        foreach (var (pi, pj) in SeenCells((i0, j0), (i1, j1), (i2, j2)))
+                        {
+                            uint maskp = board[pi, pj];
+                            if (IsValueSet(maskp) || (maskp & combMask) != maskp)
+                            {
+                                continue;
+                            }
+
+                            List<(int, int)> removedFrom = new();
+                            if ((maskp & removeMask) == 0)
+                            {
+                                // The pivot does not contain the shared digit among the pincers.
+                                // This means any cells that just the pincers see can have that shared digit removed
+                                foreach (var (ri, rj) in SeenCells((i0, j0), (i1, j1), (i2, j2)))
+                                {
+                                    LogicResult removeResult = ClearMask(ri, rj, removeMask);
+                                    if (removeResult == LogicResult.Invalid)
+                                    {
+                                        return LogicResult.Invalid;
+                                    }
+                                    if (removeResult == LogicResult.Changed)
+                                    {
+                                        removedFrom.Add((ri, rj));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // The pivot does contain the shared digit among the pincers.
+                                foreach (var (ri, rj) in SeenCells((i0, j0), (i1, j1), (i2, j2), (pi, pj)))
+                                {
+                                    LogicResult removeResult = ClearMask(ri, rj, removeMask);
+                                    if (removeResult == LogicResult.Invalid)
+                                    {
+                                        return LogicResult.Invalid;
+                                    }
+                                    if (removeResult == LogicResult.Changed)
+                                    {
+                                        removedFrom.Add((ri, rj));
+                                    }
+                                }
+                            }
+                            if (removedFrom.Count > 0)
+                            {
+                                stepDescription.Append($"WXYZ-Wing with pivot at {CellName((pi, pj))} ({MaskToString(maskp)}) and pincers at {CellName((i0, j0))} ({MaskToString(mask0)}), {CellName((i1, j1))} ({MaskToString(mask1)}), {CellName((i2, j2))} ({MaskToString(mask2)}) clears candidate {GetValue(removeMask)} from cell{(removedFrom.Count == 1 ? "" : "s")}: ");
+                                bool needComma = false;
+                                foreach (var cell in removedFrom)
+                                {
+                                    if (needComma)
+                                    {
+                                        stepDescription.Append(", ");
+                                    }
+                                    stepDescription.Append($"{CellName(cell)}");
+                                    needComma = true;
+                                }
+                                return LogicResult.Changed;
+                            }
+                        }
+                    }
+                }
+            }
+
             return LogicResult.None;
         }
 
