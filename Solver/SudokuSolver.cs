@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using SudokuBlazor.Solver.Constraints;
 using static SudokuBlazor.Solver.SolverUtility;
@@ -1150,7 +1151,7 @@ namespace SudokuBlazor.Solver
                     int numCombinations = cellCombinations.Length / tupleSize;
                     for (int combinationIndex = 0; combinationIndex < numCombinations; combinationIndex++)
                     {
-                        Span<int> curCombination = new Span<int>(cellCombinations, combinationIndex * tupleSize, tupleSize);
+                        Span<int> curCombination = new(cellCombinations, combinationIndex * tupleSize, tupleSize);
 
                         uint combinationMask = 0;
                         foreach (int cellIndex in curCombination)
@@ -1297,8 +1298,6 @@ namespace SudokuBlazor.Solver
             }
 #pragma warning restore CS0162
 
-            List<int> fishRows = new List<int>(MAX_EXTENT);
-            List<int> notFishRows = new List<int>(MAX_EXTENT);
             for (int n = 2; n <= 4; n++)
             {
                 for (int rowOrCol = 0; rowOrCol < 2; rowOrCol++)
@@ -1321,97 +1320,126 @@ namespace SudokuBlazor.Solver
                                     rows[curRow] |= 1u << curCol;
                                 }
                             }
+                            int rowCount = ValueCount(rows[curRow]);
+                            if (rowCount == 1 || rowCount > n)
+                            {
+                                rows[curRow] = 0;
+                            }
                         }
 
-                        for (int refRow = 0; refRow < height; refRow++)
+                        int[] rowCombinations = combinations[height - 1][n - 1];
+                        int numCombinations = rowCombinations.Length / n;
+                        for (int combinationIndex = 0; combinationIndex < numCombinations; combinationIndex++)
                         {
-                            uint refMask = rows[refRow];
-                            int valCount = ValueCount(refMask);
-                            if (valCount != n)
+                            Span<int> curCombination = new(rowCombinations, combinationIndex * n, n);
+                            bool validCombination = true;
+                            uint rowMask = 0;
+                            uint colMask = 0;
+                            foreach (int rowIndex in curCombination)
+                            {
+                                uint curColMask = rows[rowIndex];
+                                if (curColMask == 0)
+                                {
+                                    validCombination = false;
+                                    break;
+                                }
+                                rowMask |= 1u << rowIndex;
+                                colMask |= curColMask;
+                            }
+                            if (!validCombination)
                             {
                                 continue;
                             }
 
-                            fishRows.Clear();
-                            notFishRows.Clear();
-
-                            uint invRefMask = ~refMask;
-                            for (int checkRow = 0; checkRow < height; checkRow++)
+                            int colCount = ValueCount(colMask);
+                            if (colCount > n)
                             {
-                                if ((rows[checkRow] & invRefMask) == 0)
-                                {
-                                    fishRows.Add(checkRow);
-                                }
-                                else if ((rows[checkRow] & refMask) != 0)
-                                {
-                                    notFishRows.Add(checkRow);
-                                }
+                                continue;
                             }
-                            if (fishRows.Count > n)
+                            if (colCount < n)
                             {
-                                string rowName = isCol ? "cols" : "rows";
+                                string rowName = isCol ? "Cols" : "Rows";
 
+                                string rowList = "";
+                                foreach (int rowIndex in curCombination)
+                                {
+                                    if (rowList.Length > 0)
+                                    {
+                                        rowList += ", ";
+                                    }
+                                    rowList += (char)('0' + (rowIndex + 1));
+                                }
                                 stepDescription.Clear();
-                                stepDescription.Append($"Too many {rowName} ({fishRows.Count}) have only {n} locations for {v}");
+                                stepDescription.Append($"{rowName} {rowList} have too few locations for {v}");
                                 return LogicResult.Invalid;
                             }
-                            if (fishRows.Count == n && notFishRows.Count > 0)
+
+                            uint valueMask = ValueMask(v);
+                            uint invRowMask = ~rowMask;
+                            bool changed = false;
+                            string fishDesc = null;
+                            for (int curRow = 0; curRow < height; curRow++)
                             {
-                                bool changed = false;
-                                string fishDesc = null;
-                                foreach (int curRow in notFishRows)
+                                if ((invRowMask & (1u << curRow)) == 0)
                                 {
-                                    for (int curCol = 0; curCol < width; curCol++)
+                                    continue;
+                                }
+
+                                for (int curCol = 0; curCol < width; curCol++)
+                                {
+                                    if ((colMask & (1u << curCol)) == 0)
                                     {
-                                        if ((refMask & (1u << curCol)) != 0)
+                                        continue;
+                                    }
+
+                                    int i = isCol ? curCol : curRow;
+                                    int j = isCol ? curRow : curCol;
+                                    if ((board[i, j] & valueMask) == 0)
+                                    {
+                                        continue;
+                                    }
+
+                                    if (fishDesc == null)
+                                    {
+                                        string rowName = isCol ? "c" : "r";
+                                        string desc = "";
+                                        foreach (int fishRow in curCombination)
                                         {
-                                            int i = isCol ? curCol : curRow;
-                                            int j = isCol ? curRow : curCol;
-
-                                            if (fishDesc == null)
-                                            {
-                                                string rowName = isCol ? "c" : "r";
-                                                string desc = "";
-                                                foreach (int fishRow in fishRows)
-                                                {
-                                                    desc = $"{desc}{rowName}{fishRow + 1}";
-                                                }
-
-                                                string techniqueName = n switch
-                                                {
-                                                    2 => "X-Wing",
-                                                    3 => "Swordfish",
-                                                    4 => "Jellyfish",
-                                                    _ => $"{n}-Fish",
-                                                };
-
-                                                fishDesc = $"{techniqueName} on {desc} for value {v}";
-                                            }
-
-                                            if (!ClearValue(i, j, v))
-                                            {
-                                                stepDescription.Clear();
-                                                stepDescription.Append($"{fishDesc}, but it cannot be removed from {CellName(i, j)}");
-                                                return LogicResult.Invalid;
-                                            }
-
-                                            if (!changed)
-                                            {
-                                                stepDescription.Append($"{fishDesc}, removing that value from {CellName(i, j)}");
-                                                changed = true;
-                                            }
-                                            else
-                                            {
-                                                stepDescription.Append($", {CellName(i, j)}");
-                                            }
+                                            desc = $"{desc}{rowName}{fishRow + 1}";
                                         }
+
+                                        string techniqueName = n switch
+                                        {
+                                            2 => "X-Wing",
+                                            3 => "Swordfish",
+                                            4 => "Jellyfish",
+                                            _ => $"{n}-Fish",
+                                        };
+
+                                        fishDesc = $"{techniqueName} on {desc} for value {v}";
+                                    }
+
+                                    if (!ClearValue(i, j, v))
+                                    {
+                                        stepDescription.Clear();
+                                        stepDescription.Append($"{fishDesc}, but it cannot be removed from {CellName(i, j)}");
+                                        return LogicResult.Invalid;
+}
+
+                                    if (!changed)
+                                    {
+                                        stepDescription.Append($"{fishDesc}, removing that value from {CellName(i, j)}");
+                                        changed = true;
+                                    }
+                                    else
+                                    {
+                                        stepDescription.Append($", {CellName(i, j)}");
                                     }
                                 }
-
-                                if (changed)
-                                {
-                                    return LogicResult.Changed;
-                                }
+                            }
+                            if (changed)
+                            {
+                                return LogicResult.Changed;
                             }
                         }
                     }
